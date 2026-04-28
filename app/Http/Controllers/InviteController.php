@@ -1,0 +1,98 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Mail\InvitationMail;
+use App\Models\Invitation;
+use App\Models\Space;
+use App\Models\User;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
+use Inertia\Inertia;
+use Inertia\Response;
+
+class InviteController extends Controller
+{
+    public function index(Request $request): Response
+    {
+        $invitations = Invitation::with(['space:id,name', 'invitedBy:id,name'])
+            ->where('invited_by', $request->user()->id)
+            ->orderByDesc('created_at')
+            ->limit(50)
+            ->get();
+
+        $members = User::select('id', 'name', 'email', 'role', 'title')
+            ->orderBy('name')
+            ->get();
+
+        $spaces = Space::where('is_personal', false)
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
+        return Inertia::render('Invite/Index', [
+            'invitations' => $invitations,
+            'members' => $members,
+            'spaces' => $spaces,
+        ]);
+    }
+
+    public function store(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'email' => ['required', 'email', 'max:160'],
+            'role' => ['nullable', 'in:admin,member'],
+            'space_id' => ['nullable', 'exists:spaces,id'],
+        ]);
+
+        $invitation = Invitation::create([
+            'email' => $validated['email'],
+            'token' => Str::random(48),
+            'role' => $validated['role'] ?? 'member',
+            'space_id' => $validated['space_id'] ?? null,
+            'invited_by' => $request->user()->id,
+            'expires_at' => now()->addDays(14),
+        ]);
+
+        // Best-effort email; never block the request
+        try {
+            if (class_exists(InvitationMail::class)) {
+                Mail::to($invitation->email)->send(new InvitationMail($invitation));
+            }
+        } catch (\Throwable $e) {
+            // ignored
+        }
+
+        return back()->with('success', 'Invitation sent to '.$invitation->email);
+    }
+
+    public function destroy(Invitation $invitation): RedirectResponse
+    {
+        abort_unless($invitation->invited_by === request()->user()->id, 403);
+        $invitation->delete();
+
+        return back();
+    }
+
+    public function resend(Invitation $invitation): RedirectResponse
+    {
+        abort_unless($invitation->invited_by === request()->user()->id, 403);
+
+        $invitation->update([
+            'token' => Str::random(48),
+            'expires_at' => now()->addDays(14),
+            'accepted_at' => null,
+        ]);
+
+        try {
+            if (class_exists(InvitationMail::class)) {
+                Mail::to($invitation->email)->send(new InvitationMail($invitation));
+            }
+        } catch (\Throwable $e) {
+            // ignore
+        }
+
+        return back()->with('success', 'Invitation resent.');
+    }
+}

@@ -1,0 +1,24 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+    /* Strips @tailwindcss/forms default border, ring, padding & shadow
+       so an <input> can sit cleanly inside a styled wrapper. */
+    .bare-input {
+        @apply flex-1 bg-transparent border-0 p-0 text-sm text-white outline-none shadow-none;
+    }
+    .bare-input::placeholder {
+        @apply text-neutral-600;
+    }
+    .bare-input:focus {
+        @apply ring-0 border-0 outline-none shadow-none;
+    }
+    .bare-input:-webkit-autofill,
+    .bare-input:-webkit-autofill:hover,
+    .bare-input:-webkit-autofill:focus {
+        -webkit-text-fill-color: #fff;
+        -webkit-box-shadow: 0 0 0 1000px transparent inset;
+        transition: background-color 9999s ease-in-out 0s;
+    }
+}
