@@ -125,8 +125,8 @@ export default function Login({ status, canResetPassword }) {
                     </div>
                 </div>
 
-                <Link
-                    href={route('auth.google')}
+                <a
+                    href="/api/auth/google"
                     className="w-full inline-flex items-center justify-center gap-3 rounded-lg border border-neutral-700 bg-neutral-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-neutral-800 hover:border-neutral-600"
                 >
                     <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -136,7 +136,7 @@ export default function Login({ status, canResetPassword }) {
                         <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                     </svg>
                     Google
-                </Link>
+                </a>
 
                 <div className="relative my-4">
                     <div className="absolute inset-0 flex items-center">
