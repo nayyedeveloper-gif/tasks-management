@@ -1,5 +1,5 @@
 import { Link, usePage, router } from '@inertiajs/react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import NewSpaceModal from '@/Components/Modals/NewSpaceModal';
 import NewChannelModal from '@/Components/Modals/NewChannelModal';
 import NewDmModal from '@/Components/Modals/NewDmModal';
@@ -27,6 +27,8 @@ import {
     Briefcase,
     Target,
     BarChart3,
+    LogOut,
+    Settings,
 } from 'lucide-react';
 
 const railItems = [
@@ -243,9 +245,6 @@ export default function Sidebar() {
         <div className="flex h-screen bg-neutral-950 text-neutral-100 select-none">
             {/* Icon rail */}
             <div className="w-14 bg-neutral-950 border-r border-neutral-800 flex flex-col items-center py-3">
-                <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold mb-4">
-                    {userInitial}
-                </div>
                 <div className="flex flex-col gap-1 flex-1">
                     {railItems.filter(item => !item.adminOnly || auth?.user?.role === 'owner' || auth?.user?.role === 'admin').map((item) => {
                         const active = item.route ? isActive(item.route) : false;
@@ -511,29 +510,64 @@ export default function Sidebar() {
                     </div>
                 </div>
 
-                {/* User menu at bottom */}
-                <div className="border-t border-neutral-800 p-2">
-                    <Link
-                        href={route('profile.edit')}
-                        className="flex items-center gap-2 px-2 py-1.5 rounded-md text-sm text-neutral-300 hover:bg-neutral-800 hover:text-white transition"
-                    >
-                        <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-[10px] font-bold text-white">
-                            {userInitial}
-                        </div>
-                        <span className="flex-1 truncate">{auth?.user?.name || 'User'}</span>
-                    </Link>
-                    <button
-                        onClick={() => router.post(route('logout'))}
-                        className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-sm text-neutral-400 hover:bg-red-500/20 hover:text-red-400 transition"
-                    >
-                        <span className="text-xs">→</span>
-                        <span>Logout</span>
-                    </button>
-                </div>
             </div>
+            <ProfileMenu user={auth?.user} initial={userInitial} />
             {showNewSpace && <NewSpaceModal onClose={() => setShowNewSpace(false)} />}
             {showNewChannel && <NewChannelModal onClose={() => setShowNewChannel(false)} />}
             {showNewDm && <NewDmModal onClose={() => setShowNewDm(false)} />}
+        </div>
+    );
+}
+
+function ProfileMenu({ user, initial }) {
+    const [open, setOpen] = useState(false);
+    const ref = useRef(null);
+
+    useEffect(() => {
+        if (!open) return;
+        const onClickOutside = (e) => {
+            if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+        };
+        document.addEventListener('mousedown', onClickOutside);
+        return () => document.removeEventListener('mousedown', onClickOutside);
+    }, [open]);
+
+    return (
+        <div ref={ref} className="fixed top-3 right-4 z-50">
+            <button
+                type="button"
+                onClick={() => setOpen(o => !o)}
+                className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-semibold text-base shadow-lg ring-2 ring-neutral-900 hover:ring-neutral-700 transition"
+                title={user?.name || 'Profile'}
+            >
+                {initial}
+            </button>
+            {open && (
+                <div className="absolute right-0 mt-2 w-56 bg-neutral-900 border border-neutral-700 rounded-lg shadow-2xl overflow-hidden">
+                    <div className="px-4 py-3 border-b border-neutral-800">
+                        <div className="text-sm font-semibold text-white truncate">{user?.name || 'User'}</div>
+                        <div className="text-xs text-neutral-400 truncate">{user?.email}</div>
+                    </div>
+                    <div className="py-1">
+                        <Link
+                            href={route('profile.edit')}
+                            onClick={() => setOpen(false)}
+                            className="flex items-center gap-2 px-4 py-2 text-sm text-neutral-200 hover:bg-neutral-800"
+                        >
+                            <Settings size={14} className="text-neutral-400" />
+                            <span>Profile Settings</span>
+                        </Link>
+                        <button
+                            type="button"
+                            onClick={() => { setOpen(false); router.post(route('logout')); }}
+                            className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-300 hover:bg-red-500/10"
+                        >
+                            <LogOut size={14} />
+                            <span>Log out</span>
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
