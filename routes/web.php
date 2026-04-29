@@ -26,7 +26,6 @@ use App\Http\Controllers\GoalController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PlannerController;
 use App\Http\Controllers\UsersController;
-use App\Http\Controllers\GoogleAuthController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -204,9 +203,5 @@ Route::middleware('auth')->group(function () {
     Route::put('/users/{user}/role', [UsersController::class, 'updateRole'])->name('users.update-role');
     Route::post('/users/{user}/toggle-active', [UsersController::class, 'toggleActive'])->name('users.toggle-active');
 });
-
-// Google OAuth
-Route::get('/api/auth/google', [GoogleAuthController::class, 'redirect'])->name('auth.google');
-Route::get('/api/auth/google/callback', [GoogleAuthController::class, 'callback'])->name('auth.google.callback');
 
 require __DIR__.'/auth.php';
