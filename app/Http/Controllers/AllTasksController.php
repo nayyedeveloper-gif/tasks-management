@@ -44,8 +44,7 @@ class AllTasksController extends Controller
             ->get();
 
         // Get all statuses for filter/status options
-        $statuses = TaskStatus::whereIn('space_id', $spaces)
-            ->orWhereIn('task_list_id', function ($q) use ($spaces) {
+        $statuses = TaskStatus::whereIn('task_list_id', function ($q) use ($spaces) {
                 $q->select('id')->from('task_lists')->whereIn('space_id', $spaces);
             })
             ->distinct()

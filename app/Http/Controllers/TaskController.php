@@ -28,8 +28,7 @@ class TaskController extends Controller
             ? \App\Models\Tag::where('space_id', $task->list->space_id)->get()
             : [];
 
-        $statuses = \App\Models\TaskStatus::where('space_id', $task->space_id)
-            ->orWhere('task_list_id', $task->task_list_id)
+        $statuses = \App\Models\TaskStatus::where('task_list_id', $task->task_list_id)
             ->get(['key', 'label', 'color', 'position']);
 
         return Inertia::render('Tasks/Show', [
