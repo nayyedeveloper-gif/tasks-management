@@ -1,5 +1,6 @@
 import { Link, router, usePage } from '@inertiajs/react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import axios from 'axios';
 import Sidebar from '@/Components/Sidebar';
 import {
     LayoutList,
@@ -124,6 +125,10 @@ export default function AllTasksIndex({ tasks, groupedByStatus, statuses, spaces
 
     const updateTaskStatus = (taskId, status) => {
         router.put(route('tasks.update', taskId), { status }, { preserveScroll: true });
+    };
+
+    const updateTaskAssignee = (taskId, assignedTo) => {
+        router.put(route('tasks.update', taskId), { assigned_to: assignedTo }, { preserveScroll: true });
     };
 
     const deleteTask = (taskId) => {
@@ -258,6 +263,7 @@ export default function AllTasksIndex({ tasks, groupedByStatus, statuses, spaces
                             filteredGrouped={filteredGrouped}
                             statuses={statuses}
                             onStatusChange={updateTaskStatus}
+                            onAssigneeChange={updateTaskAssignee}
                             onDelete={deleteTask}
                         />
                     ) : view === 'list' ? (
@@ -303,6 +309,7 @@ export default function AllTasksIndex({ tasks, groupedByStatus, statuses, spaces
                                                 statuses={statuses}
                                                 onClick={() => router.push(route('tasks.show', task.id))}
                                                 onStatusChange={(status) => updateTaskStatus(task.id, status)}
+                                                onAssigneeChange={(uid) => updateTaskAssignee(task.id, uid)}
                                                 onDelete={() => deleteTask(task.id)}
                                             />
                                         ))}
@@ -347,7 +354,7 @@ export default function AllTasksIndex({ tasks, groupedByStatus, statuses, spaces
     );
 }
 
-function TaskRow({ task, statuses, onClick, onStatusChange, onDelete }) {
+function TaskRow({ task, statuses, onClick, onStatusChange, onAssigneeChange, onDelete }) {
     const st = statuses.find(s => s.key === task.status) || { key: task.status, label: task.status, color: '#6b7280' };
     const hasSubtasks = (task.subtasks_count || 0) > 0;
 
@@ -376,17 +383,11 @@ function TaskRow({ task, statuses, onClick, onStatusChange, onDelete }) {
                     </span>
                 )}
             </div>
-            <div className="col-span-2 flex items-center gap-1.5">
-                {task.assigned_to ? (
-                    <>
-                        <div className="w-5 h-5 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-[10px] font-bold text-white">
-                            {task.assigned_to.name.charAt(0).toUpperCase()}
-                        </div>
-                        <span className="text-xs text-neutral-400 truncate">{task.assigned_to.name}</span>
-                    </>
-                ) : (
-                    <span className="text-xs text-neutral-500">—</span>
-                )}
+            <div className="col-span-2">
+                <AssigneePicker
+                    assigned={task.assigned_to}
+                    onChange={onAssigneeChange}
+                />
             </div>
             <div className="col-span-2 text-xs text-neutral-400">
                 {task.due_date ? (
@@ -435,7 +436,7 @@ function TaskRow({ task, statuses, onClick, onStatusChange, onDelete }) {
     );
 }
 
-function BoardView({ filteredGrouped, statuses, onStatusChange, onDelete }) {
+function BoardView({ filteredGrouped, statuses, onStatusChange, onAssigneeChange, onDelete }) {
     const groups = Object.entries(filteredGrouped);
     if (groups.length === 0) {
         return (
@@ -464,6 +465,7 @@ function BoardView({ filteredGrouped, statuses, onStatusChange, onDelete }) {
                                     task={task}
                                     statuses={statuses}
                                     onStatusChange={(s) => onStatusChange(task.id, s)}
+                                    onAssigneeChange={(uid) => onAssigneeChange(task.id, uid)}
                                     onDelete={() => onDelete(task.id)}
                                 />
                             ))}
@@ -478,7 +480,7 @@ function BoardView({ filteredGrouped, statuses, onStatusChange, onDelete }) {
     );
 }
 
-function BoardCard({ task, statuses, onStatusChange, onDelete }) {
+function BoardCard({ task, statuses, onStatusChange, onAssigneeChange, onDelete }) {
     const st = statuses.find(s => s.key === task.status) || { key: task.status, label: task.status, color: '#6b7280' };
     return (
         <div className="group relative bg-neutral-900 hover:bg-neutral-800/80 border border-neutral-800 rounded-md p-2.5 transition">
@@ -519,13 +521,130 @@ function BoardCard({ task, statuses, onStatusChange, onDelete }) {
                             {formatDate(task.due_date)}
                         </span>
                     )}
-                    {task.assigned_to && (
-                        <div className="w-5 h-5 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-[10px] font-bold text-white" title={task.assigned_to.name}>
-                            {task.assigned_to.name.charAt(0).toUpperCase()}
-                        </div>
-                    )}
+                    <AssigneePicker
+                        assigned={task.assigned_to}
+                        onChange={onAssigneeChange}
+                        compact
+                    />
                 </div>
             </div>
+        </div>
+    );
+}
+
+let _membersCache = null;
+let _membersPromise = null;
+function fetchMembers() {
+    if (_membersCache) return Promise.resolve(_membersCache);
+    if (_membersPromise) return _membersPromise;
+    _membersPromise = axios.get(route('members.index'))
+        .then(r => {
+            _membersCache = r.data?.users || [];
+            return _membersCache;
+        })
+        .finally(() => { _membersPromise = null; });
+    return _membersPromise;
+}
+
+function AssigneePicker({ assigned, onChange, compact = false }) {
+    const [open, setOpen] = useState(false);
+    const [members, setMembers] = useState([]);
+    const [search, setSearch] = useState('');
+    const ref = useRef(null);
+
+    useEffect(() => {
+        if (!open) return;
+        fetchMembers().then(setMembers).catch(() => setMembers([]));
+        const onClickOutside = (e) => {
+            if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+        };
+        document.addEventListener('mousedown', onClickOutside);
+        return () => document.removeEventListener('mousedown', onClickOutside);
+    }, [open]);
+
+    const filtered = useMemo(() => {
+        if (!search.trim()) return members;
+        const q = search.toLowerCase();
+        return members.filter(m => m.name?.toLowerCase().includes(q) || m.email?.toLowerCase().includes(q));
+    }, [members, search]);
+
+    const handlePick = (e, userId) => {
+        e.stopPropagation();
+        setOpen(false);
+        onChange?.(userId);
+    };
+
+    return (
+        <div className="relative inline-block" ref={ref} onClick={(e) => e.stopPropagation()}>
+            <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); setOpen(o => !o); }}
+                className={`flex items-center gap-1.5 hover:bg-neutral-800/60 rounded px-1.5 py-0.5 transition ${compact ? '' : 'max-w-full'}`}
+                title={assigned?.name || 'Unassigned'}
+            >
+                {assigned ? (
+                    <>
+                        <div className="w-5 h-5 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0">
+                            {assigned.name.charAt(0).toUpperCase()}
+                        </div>
+                        {!compact && (
+                            <span className="text-xs text-neutral-300 truncate">{assigned.name}</span>
+                        )}
+                    </>
+                ) : (
+                    <>
+                        <div className="w-5 h-5 rounded-full border border-dashed border-neutral-600 flex items-center justify-center flex-shrink-0">
+                            <User size={10} className="text-neutral-500" />
+                        </div>
+                        {!compact && <span className="text-xs text-neutral-500">Unassigned</span>}
+                    </>
+                )}
+            </button>
+
+            {open && (
+                <div className="absolute z-50 mt-1 left-0 w-56 bg-neutral-900 border border-neutral-700 rounded-md shadow-xl overflow-hidden">
+                    <div className="p-2 border-b border-neutral-800">
+                        <div className="relative">
+                            <Search size={12} className="absolute left-2 top-1/2 -translate-y-1/2 text-neutral-500" />
+                            <input
+                                autoFocus
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                placeholder="Search members..."
+                                className="w-full bg-neutral-950 border border-neutral-800 rounded pl-7 pr-2 py-1 text-xs focus:outline-none focus:border-purple-500"
+                            />
+                        </div>
+                    </div>
+                    <div className="max-h-60 overflow-y-auto py-1">
+                        <button
+                            type="button"
+                            onClick={(e) => handlePick(e, null)}
+                            className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-neutral-300 hover:bg-neutral-800"
+                        >
+                            <div className="w-5 h-5 rounded-full border border-dashed border-neutral-600 flex items-center justify-center">
+                                <User size={10} className="text-neutral-500" />
+                            </div>
+                            Unassigned
+                        </button>
+                        {filtered.map(m => (
+                            <button
+                                key={m.id}
+                                type="button"
+                                onClick={(e) => handlePick(e, m.id)}
+                                className={`w-full flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-neutral-800 ${assigned?.id === m.id ? 'text-purple-300 bg-neutral-800/40' : 'text-neutral-300'}`}
+                            >
+                                <div className="w-5 h-5 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-[10px] font-bold text-white">
+                                    {m.name.charAt(0).toUpperCase()}
+                                </div>
+                                <span className="truncate">{m.name}</span>
+                            </button>
+                        ))}
+                        {filtered.length === 0 && (
+                            <div className="px-3 py-2 text-[11px] text-neutral-500 italic">No members found</div>
+                        )}
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
