@@ -33,7 +33,7 @@ class MessageReactionUpdated implements ShouldBroadcastNow
 
     public function broadcastAs(): string
     {
-        return 'message.reaction';
+        return '.message.reaction';
     }
 
     public function broadcastWith(): array

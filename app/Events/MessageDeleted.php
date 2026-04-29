@@ -34,7 +34,7 @@ class MessageDeleted implements ShouldBroadcastNow
 
     public function broadcastAs(): string
     {
-        return 'message.deleted';
+        return '.message.deleted';
     }
 
     public function broadcastWith(): array
