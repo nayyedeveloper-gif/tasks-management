@@ -21,10 +21,7 @@ export default function GuestLayout({ children, title, subtitle }) {
 
                 <div className="relative z-10">
                     <Link href="/" className="inline-flex items-center gap-2">
-                        <span className="w-9 h-9 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold shadow-lg">
-                            P
-                        </span>
-                        <span className="text-lg font-semibold tracking-tight">ProjectHub</span>
+                        <img src="/logo.png" alt="29 Management" className="h-10 w-auto" />
                     </Link>
                 </div>
 
@@ -63,10 +60,7 @@ export default function GuestLayout({ children, title, subtitle }) {
                 <div className="w-full max-w-md">
                     {/* Mobile-only brand */}
                     <Link href="/" className="lg:hidden inline-flex items-center gap-2 mb-8">
-                        <span className="w-9 h-9 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold shadow-lg">
-                            P
-                        </span>
-                        <span className="text-lg font-semibold">ProjectHub</span>
+                        <img src="/logo.png" alt="29 Management" className="h-10 w-auto" />
                     </Link>
 
                     {(title || subtitle) && (

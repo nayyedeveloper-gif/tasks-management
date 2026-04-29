@@ -292,15 +292,10 @@ export default function Sidebar() {
             <div className="w-64 bg-neutral-900 border-r border-neutral-800 flex flex-col">
                 {/* Workspace header */}
                 <div className="px-3 py-3 border-b border-neutral-800 flex items-center gap-2">
-                    <div className="w-6 h-6 rounded bg-emerald-500 flex items-center justify-center text-[11px] font-bold text-white">
-                        {userInitial}
-                    </div>
+                    <img src="/logo.png" alt="29 Management" className="h-8 w-auto" />
                     <div className="flex-1 truncate text-sm font-semibold">
                         {auth?.user?.name ? `${auth.user.name}'s Workspace` : 'Workspace'}
                     </div>
-                    <button className="text-neutral-400 hover:text-white">
-                        <CalendarDays size={15} />
-                    </button>
                 </div>
 
                 {/* Search */}
