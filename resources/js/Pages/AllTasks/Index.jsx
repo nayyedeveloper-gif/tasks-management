@@ -253,6 +253,15 @@ export default function AllTasksIndex({ tasks, groupedByStatus, statuses, spaces
 
                 {/* Task List */}
                 <div className="flex-1 overflow-auto">
+                    {view === 'board' ? (
+                        <BoardView
+                            filteredGrouped={filteredGrouped}
+                            statuses={statuses}
+                            onStatusChange={updateTaskStatus}
+                            onDelete={deleteTask}
+                        />
+                    ) : view === 'list' ? (
+                    <>
                     {/* Column Headers */}
                     <div className="grid grid-cols-12 gap-2 px-4 py-2 border-b border-neutral-800 bg-neutral-900/50 text-[11px] uppercase tracking-wider text-neutral-500 sticky top-0 z-10">
                         <div className="col-span-5">Name</div>
@@ -325,6 +334,12 @@ export default function AllTasksIndex({ tasks, groupedByStatus, statuses, spaces
                             </button>
                         </div>
                     )}
+                    </>
+                    ) : (
+                        <div className="flex items-center justify-center h-full text-neutral-500 text-sm">
+                            Calendar view coming soon
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -381,7 +396,7 @@ function TaskRow({ task, statuses, onClick, onStatusChange, onDelete }) {
                 ) : '—'}
             </div>
             <div className="col-span-1">
-                {task.priority && (
+                {task.priority && task.priority !== 'medium' && (
                     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] border ${priorityTone(task.priority)}`}>
                         {priorityFlag(task.priority)}
                         <span className="capitalize">{task.priority}</span>
@@ -415,6 +430,101 @@ function TaskRow({ task, statuses, onClick, onStatusChange, onDelete }) {
                 >
                     <Trash2 size={14} />
                 </button>
+            </div>
+        </div>
+    );
+}
+
+function BoardView({ filteredGrouped, statuses, onStatusChange, onDelete }) {
+    const groups = Object.entries(filteredGrouped);
+    if (groups.length === 0) {
+        return (
+            <div className="flex flex-col items-center justify-center py-16 text-neutral-500">
+                <CheckCircle2 size={48} className="mb-4 text-neutral-700" />
+                <p className="text-sm">No tasks to display</p>
+            </div>
+        );
+    }
+    return (
+        <div className="flex gap-3 p-4 h-full overflow-x-auto">
+            {groups.map(([key, group]) => {
+                const st = group.status;
+                const color = st?.color || '#6b7280';
+                return (
+                    <div key={key} className="flex-shrink-0 w-72 flex flex-col bg-neutral-900/40 rounded-lg border border-neutral-800">
+                        <div className="px-3 py-2.5 border-b border-neutral-800 flex items-center gap-2">
+                            <div className="w-2.5 h-2.5 rounded-full" style={{ background: color }} />
+                            <span className="text-xs font-semibold text-neutral-200 uppercase tracking-wider">{st?.label || key}</span>
+                            <span className="text-xs text-neutral-500 ml-auto">{group.tasks.length}</span>
+                        </div>
+                        <div className="flex-1 p-2 space-y-2 overflow-y-auto">
+                            {group.tasks.map(task => (
+                                <BoardCard
+                                    key={task.id}
+                                    task={task}
+                                    statuses={statuses}
+                                    onStatusChange={(s) => onStatusChange(task.id, s)}
+                                    onDelete={() => onDelete(task.id)}
+                                />
+                            ))}
+                            {group.tasks.length === 0 && (
+                                <div className="text-[11px] text-neutral-600 italic px-2 py-3 text-center">No tasks</div>
+                            )}
+                        </div>
+                    </div>
+                );
+            })}
+        </div>
+    );
+}
+
+function BoardCard({ task, statuses, onStatusChange, onDelete }) {
+    const st = statuses.find(s => s.key === task.status) || { key: task.status, label: task.status, color: '#6b7280' };
+    return (
+        <div className="group relative bg-neutral-900 hover:bg-neutral-800/80 border border-neutral-800 rounded-md p-2.5 transition">
+            <div className="flex items-start justify-between gap-2 mb-1.5">
+                <Link href={route('tasks.show', task.id)} className="text-sm text-neutral-100 hover:underline line-clamp-2 flex-1">
+                    {task.title}
+                </Link>
+                <button
+                    onClick={(e) => { e.stopPropagation(); onDelete(); }}
+                    className="text-neutral-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition flex-shrink-0"
+                >
+                    <Trash2 size={12} />
+                </button>
+            </div>
+            {task.list?.name && (
+                <div className="text-[10px] text-neutral-500 mb-1.5 truncate">{task.list.name}</div>
+            )}
+            <div className="flex items-center justify-between gap-2 mt-2">
+                <select
+                    value={task.status}
+                    onChange={(e) => { e.stopPropagation(); onStatusChange(e.target.value); }}
+                    onClick={(e) => e.stopPropagation()}
+                    className="text-[10px] rounded px-1.5 py-0.5 border-none flex-1 max-w-[110px] truncate"
+                    style={statusStyle(st.color || '#6b7280')}
+                >
+                    {statuses.map(s => (
+                        <option key={s.key} value={s.key} className="bg-neutral-800 text-neutral-100">
+                            {s.label}
+                        </option>
+                    ))}
+                </select>
+                <div className="flex items-center gap-1.5 ml-auto">
+                    {task.priority && task.priority !== 'medium' && (
+                        <span className="text-[10px]" title={task.priority}>{priorityFlag(task.priority)}</span>
+                    )}
+                    {task.due_date && (
+                        <span className={`text-[10px] ${isOverdue(task.due_date) ? 'text-red-400' : 'text-neutral-400'}`}>
+                            {formatDate(task.due_date)}
+                        </span>
+                    )}
+                    {task.assigned_to && (
+                        <div className="w-5 h-5 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-[10px] font-bold text-white" title={task.assigned_to.name}>
+                            {task.assigned_to.name.charAt(0).toUpperCase()}
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );
