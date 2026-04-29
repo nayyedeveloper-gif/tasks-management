@@ -37,6 +37,7 @@ const railItems = [
     { id: 'goals', label: 'Goals', icon: Target, route: 'goals.index' },
     { id: 'dashboards', label: 'Dash', icon: BarChart3, route: 'dashboards.index' },
     { id: 'crm', label: 'CRM', icon: Briefcase, route: 'contacts.index' },
+    { id: 'users', label: 'Users', icon: UserCheck, route: 'users.index', adminOnly: true },
 ];
 
 const homeMenu = [
@@ -246,7 +247,7 @@ export default function Sidebar() {
                     {userInitial}
                 </div>
                 <div className="flex flex-col gap-1 flex-1">
-                    {railItems.map((item) => {
+                    {railItems.filter(item => !item.adminOnly || auth?.user?.role === 'owner' || auth?.user?.role === 'admin').map((item) => {
                         const active = item.route ? isActive(item.route) : false;
                         const Icon = item.icon;
                         const button = (

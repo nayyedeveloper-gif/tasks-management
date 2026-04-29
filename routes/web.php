@@ -25,6 +25,7 @@ use App\Http\Controllers\InviteController;
 use App\Http\Controllers\GoalController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PlannerController;
+use App\Http\Controllers\UsersController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -196,6 +197,11 @@ Route::middleware('auth')->group(function () {
 
     // Mention autocomplete (user search)
     Route::get('/api/users/search', [MessageController::class, 'searchUsers'])->name('users.search');
+
+    // User management (admin only)
+    Route::get('/users', [UsersController::class, 'index'])->name('users.index');
+    Route::put('/users/{user}/role', [UsersController::class, 'updateRole'])->name('users.update-role');
+    Route::post('/users/{user}/toggle-active', [UsersController::class, 'toggleActive'])->name('users.toggle-active');
 });
 
 require __DIR__.'/auth.php';
