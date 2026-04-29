@@ -167,7 +167,7 @@ export default function TaskShow({ task: initialTask, tagsAvailable, statuses })
             <Sidebar />
             <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Top Navigation Bar */}
-                <div className="px-4 py-2 border-b border-neutral-800 flex items-center gap-2">
+                <div className="px-4 py-2 border-b border-neutral-800 flex items-center gap-2 pr-20">
                     <button
                         onClick={() => window.history.back()}
                         className="p-1.5 rounded hover:bg-neutral-800 text-neutral-400 hover:text-white"

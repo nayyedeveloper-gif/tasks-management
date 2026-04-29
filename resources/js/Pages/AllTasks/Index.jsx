@@ -144,7 +144,7 @@ export default function AllTasksIndex({ tasks, groupedByStatus, statuses, spaces
             <Sidebar />
             <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Header */}
-                <div className="px-6 py-4 border-b border-neutral-800">
+                <div className="px-6 py-4 border-b border-neutral-800 pr-20">
                     <div className="flex items-center gap-2 text-xs text-neutral-500 mb-1">
                         <span>Workspace</span>
                         <ChevronRight size={12} />
