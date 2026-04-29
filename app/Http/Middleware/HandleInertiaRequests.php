@@ -108,10 +108,17 @@ class HandleInertiaRequests extends Middleware
             ->unique('id')
             ->values();
 
+        // Get all members for direct messages
+        $allMembers = \App\Models\User::select('id', 'name', 'email')
+            ->where('id', '!=', $userId)
+            ->orderBy('name')
+            ->get();
+
         return [
             'spaces' => $spaces,
             'channels' => $channels,
             'directMessages' => $directMessages,
+            'allMembers' => $allMembers,
         ];
     }
 }

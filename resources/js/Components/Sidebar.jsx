@@ -205,8 +205,8 @@ function SpaceNode({ space, level, currentUrl, expanded, onToggle }) {
 export default function Sidebar() {
     const { url, props } = usePage();
     const auth = props.auth;
-    const sidebarData = props.sidebar || { spaces: [], channels: [], directMessages: [] };
-    const { spaces = [], channels = [], directMessages = [] } = sidebarData;
+    const sidebarData = props.sidebar || { spaces: [], channels: [], directMessages: [], allMembers: [] };
+    const { spaces = [], channels = [], directMessages = [], allMembers = [] } = sidebarData;
     const badges = props.badges || {};
 
     const [openSections, setOpenSections] = useState({
@@ -481,23 +481,16 @@ export default function Sidebar() {
                                 {/* Direct Messages */}
                                 <div className="flex items-center justify-between px-3 pt-3 pb-1">
                                     <span className="text-[10px] font-semibold uppercase tracking-wider text-neutral-500">
-                                        Direct Messages
+                                        Members
                                     </span>
-                                    <button
-                                        onClick={() => setShowNewDm(true)}
-                                        className="text-neutral-400 hover:text-white"
-                                        title="New message"
-                                    >
-                                        <Plus size={12} />
-                                    </button>
                                 </div>
                                 <div className="space-y-0.5">
-                                    {directMessages.length === 0 && (
+                                    {allMembers.length === 0 && (
                                         <div className="px-3 py-1 text-xs text-neutral-500 italic">
-                                            No conversations yet
+                                            No members yet
                                         </div>
                                     )}
-                                    {directMessages.map((user) => (
+                                    {allMembers.map((user) => (
                                         <Link
                                             key={user.id}
                                             href={route('messages.index', { user: user.id })}
@@ -512,14 +505,6 @@ export default function Sidebar() {
                                             <span className="flex-1 truncate">{user.name}</span>
                                         </Link>
                                     ))}
-                                    <button
-                                        onClick={() => setShowNewDm(true)}
-                                        className="w-full flex items-center gap-2 px-3 py-1.5 rounded-md text-sm text-neutral-400 hover:bg-neutral-800/70 hover:text-white"
-                                        style={{ paddingLeft: 28 }}
-                                    >
-                                        <Plus size={12} />
-                                        <span>New message</span>
-                                    </button>
                                 </div>
                             </div>
                         )}
