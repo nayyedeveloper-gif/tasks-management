@@ -1,4 +1,4 @@
-import { Link, usePage } from '@inertiajs/react';
+import { Link, usePage, router } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import NewSpaceModal from '@/Components/Modals/NewSpaceModal';
 import NewChannelModal from '@/Components/Modals/NewChannelModal';
@@ -523,6 +523,26 @@ export default function Sidebar() {
                             </div>
                         )}
                     </div>
+                </div>
+
+                {/* User menu at bottom */}
+                <div className="border-t border-neutral-800 p-2">
+                    <Link
+                        href={route('profile.edit')}
+                        className="flex items-center gap-2 px-2 py-1.5 rounded-md text-sm text-neutral-300 hover:bg-neutral-800 hover:text-white transition"
+                    >
+                        <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-[10px] font-bold text-white">
+                            {userInitial}
+                        </div>
+                        <span className="flex-1 truncate">{auth?.user?.name || 'User'}</span>
+                    </Link>
+                    <button
+                        onClick={() => router.post(route('logout'))}
+                        className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-sm text-neutral-400 hover:bg-red-500/20 hover:text-red-400 transition"
+                    >
+                        <span className="text-xs">→</span>
+                        <span>Logout</span>
+                    </button>
                 </div>
             </div>
             {showNewSpace && <NewSpaceModal onClose={() => setShowNewSpace(false)} />}
