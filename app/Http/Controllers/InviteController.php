@@ -57,14 +57,14 @@ class InviteController extends Controller
             'status' => 'pending',
         ]);
 
-        // Best-effort email; never block the request
+        // Best-effort email
         try {
             if (class_exists(InvitationMail::class)) {
                 $inviter = $request->user();
                 Mail::to($invitation->email)->send(new InvitationMail($invitation, $inviter));
             }
         } catch (\Throwable $e) {
-            // ignored
+            \Illuminate\Support\Facades\Log::error('Failed to send invitation email: ' . $e->getMessage());
         }
 
         return back()->with('success', 'Invitation sent to '.$invitation->email);
