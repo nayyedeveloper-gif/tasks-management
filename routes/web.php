@@ -235,6 +235,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/users', [UsersController::class, 'index'])->name('users.index');
         Route::put('/users/{user}/role', [UsersController::class, 'updateRole'])->name('users.update-role');
         Route::post('/users/{user}/toggle-active', [UsersController::class, 'toggleActive'])->name('users.toggle-active');
+        Route::delete('/users/{user}', [UsersController::class, 'destroy'])->name('users.destroy');
         Route::post('/permissions/role', [UsersController::class, 'updateRolePermissions'])->name('permissions.update-role');
     });
 });

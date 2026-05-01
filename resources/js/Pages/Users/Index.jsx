@@ -1,7 +1,7 @@
 import { router, useForm, usePage, Head } from '@inertiajs/react';
 import { useState } from 'react';
 import Sidebar from '@/Components/Sidebar';
-import { Search, Shield, UserCheck, UserX, ChevronDown, Check, ChevronUp, Users, Key, Settings } from 'lucide-react';
+import { Search, Shield, UserCheck, UserX, ChevronDown, Check, ChevronUp, Users, Key, Settings, Trash2 } from 'lucide-react';
 
 export default function UsersIndex({ users, roles, permissions, auth }) {
     const { flash } = usePage().props;
@@ -41,6 +41,13 @@ export default function UsersIndex({ users, roles, permissions, auth }) {
 
     const toggleActive = (userId) => {
         router.post(route('users.toggle-active', userId), {}, { preserveScroll: true });
+    };
+
+    const deleteUser = (user) => {
+        if (!confirm(`Are you sure you want to delete ${user.name}? This action cannot be undone.`)) return;
+        router.delete(route('users.destroy', user.id), {
+            preserveScroll: true,
+        });
     };
 
     const submitRolePermissions = (e) => {
@@ -203,19 +210,28 @@ export default function UsersIndex({ users, roles, permissions, auth }) {
                                                         </div>
                                                     </div>
 
-                                                    <div className="col-span-2 flex items-center justify-end">
+                                                    <div className="col-span-2 flex items-center justify-end gap-1">
                                                         {user.id !== auth.user.id && (
-                                                            <button
-                                                                onClick={() => toggleActive(user.id)}
-                                                                className={`p-2 rounded-md transition ${
-                                                                    user.email_verified_at
-                                                                        ? 'text-neutral-400 hover:text-red-400 hover:bg-red-400/10'
-                                                                        : 'text-neutral-400 hover:text-emerald-400 hover:bg-emerald-400/10'
-                                                                }`}
-                                                                title={user.email_verified_at ? 'Deactivate' : 'Activate'}
-                                                            >
-                                                                {user.email_verified_at ? <UserX size={16} /> : <UserCheck size={16} />}
-                                                            </button>
+                                                            <>
+                                                                <button
+                                                                    onClick={() => toggleActive(user.id)}
+                                                                    className={`p-2 rounded-md transition ${
+                                                                        user.email_verified_at
+                                                                            ? 'text-neutral-400 hover:text-red-400 hover:bg-red-400/10'
+                                                                            : 'text-neutral-400 hover:text-emerald-400 hover:bg-emerald-400/10'
+                                                                    }`}
+                                                                    title={user.email_verified_at ? 'Deactivate' : 'Activate'}
+                                                                >
+                                                                    {user.email_verified_at ? <UserX size={16} /> : <UserCheck size={16} />}
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => deleteUser(user)}
+                                                                    className="p-2 rounded-md text-neutral-400 hover:text-red-500 hover:bg-red-500/10 transition"
+                                                                    title="Delete User"
+                                                                >
+                                                                    <Trash2 size={16} />
+                                                                </button>
+                                                            </>
                                                         )}
                                                     </div>
                                                 </div>
