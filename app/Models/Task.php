@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Observers\TaskObserver;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -9,6 +10,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Task extends Model
 {
+    protected static function booted()
+    {
+        static::observe(TaskObserver::class);
+    }
+
     protected $fillable = [
         'title',
         'description',

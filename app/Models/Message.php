@@ -2,12 +2,18 @@
 
 namespace App\Models;
 
+use App\Observers\MessageObserver;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Message extends Model
 {
+    protected static function booted()
+    {
+        static::observe(MessageObserver::class);
+    }
+
     protected $fillable = [
         'channel_id',
         'sender_id',
