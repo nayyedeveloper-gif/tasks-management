@@ -189,7 +189,7 @@ export default function Composer({
             )}
 
             {/* Composer shell */}
-            <div className="relative rounded-xl bg-neutral-900 border border-neutral-800 focus-within:border-neutral-700 focus-within:ring-1 focus-within:ring-purple-500/30 transition">
+            <div className="relative rounded-xl bg-neutral-900 border border-neutral-800 focus-within:border-neutral-700 focus-within:ring-1 focus-within:ring-purple-500/20 transition">
                 {/* Attachments preview */}
                 {attachments.length > 0 && (
                     <div className="flex flex-wrap gap-2 p-3 border-b border-neutral-800">
@@ -235,7 +235,7 @@ export default function Composer({
                     }}
                     placeholder={placeholder}
                     rows={1}
-                    className="w-full bg-transparent px-4 pt-3 pb-2 text-[14.5px] text-white placeholder:text-neutral-500 outline-none resize-none"
+                    className="w-full bg-transparent px-4 pt-3 pb-2 text-[14.5px] text-white placeholder:text-neutral-500 outline-none focus:outline-none focus:ring-0 border-none focus:border-none resize-none"
                 />
 
                 {/* Toolbar */}
