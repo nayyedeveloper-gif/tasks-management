@@ -41,10 +41,26 @@ class InvitationController extends Controller
 
     public function accept($token)
     {
-        $invitation = Invitation::where('token', $token)
-            ->where('status', 'pending')
-            ->where('expires_at', '>', now())
-            ->firstOrFail();
+        $invitation = Invitation::where('token', $token)->first();
+
+        if (!$invitation) {
+            return redirect()->route('login')->with('error', 'Invalid invitation link.');
+        }
+
+        if ($invitation->status === 'accepted') {
+            // If already accepted and not logged in, go to login. If logged in, go to space/dashboard.
+            if (auth()->check()) {
+                if ($invitation->space_id) {
+                    return redirect()->route('spaces.show', $invitation->space_id)->with('info', 'You have already accepted this invitation.');
+                }
+                return redirect()->route('dashboard')->with('info', 'You have already accepted this invitation.');
+            }
+            return redirect()->route('login')->with('info', 'This invitation has already been accepted. Please log in.');
+        }
+
+        if ($invitation->expires_at && $invitation->expires_at->isPast()) {
+            return redirect()->route('login')->with('error', 'This invitation link has expired.');
+        }
 
         // Check if user exists
         $user = User::where('email', $invitation->email)->first();
@@ -54,18 +70,20 @@ class InvitationController extends Controller
             return redirect()->route('register', ['token' => $token])->with('info', 'Please create an account to accept the invitation.');
         }
 
-        // Auto-accept the invitation
+        // Auto-accept the invitation if user exists
         $invitation->update([
             'accepted_at' => now(),
             'status' => 'accepted',
             'user_id' => $user->id,
         ]);
 
-        // Assign role to user
-        $user->update([
-            'role' => $invitation->role,
-            'role_id' => $invitation->role === 'admin' ? 1 : 2,
-        ]);
+        // Assign role to user if they don't have one or if it's a legacy user
+        if ($user->role === 'member' || !$user->role) {
+            $user->update([
+                'role' => $invitation->role,
+                'role_id' => $invitation->role === 'admin' ? 1 : 2,
+            ]);
+        }
 
         // Add user to space if space_id exists
         if ($invitation->space_id) {
