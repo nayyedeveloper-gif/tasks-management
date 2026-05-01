@@ -121,15 +121,17 @@ class InviteController extends Controller
             if ($invitation->space_id) {
                 $invitation->space->users()->syncWithoutDetaching([$user->id]);
             }
+        }
 
-            // Send confirmation email to inviter
-            $inviter = User::find($invitation->invited_by);
-            if ($inviter && class_exists(InvitationAcceptedMail::class)) {
-                try {
+        // Send confirmation email to inviter (always send, even if user doesn't exist yet)
+        $inviter = User::find($invitation->invited_by);
+        if ($inviter) {
+            try {
+                if (class_exists(InvitationAcceptedMail::class)) {
                     Mail::to($inviter->email)->send(new InvitationAcceptedMail($invitation, $user));
-                } catch (\Throwable $e) {
-                    // ignore
                 }
+            } catch (\Throwable $e) {
+                \Log::error('Failed to send invitation accepted email: ' . $e->getMessage());
             }
         }
 

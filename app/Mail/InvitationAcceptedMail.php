@@ -26,9 +26,10 @@ class InvitationAcceptedMail extends Mailable
     public function envelope(): Envelope
     {
         $targetName = $this->invitation->team ? $this->invitation->team->name : ($this->invitation->space ? $this->invitation->space->name : 'the workspace');
+        $userName = $this->user ? $this->user->name : $this->invitation->email;
         
         return new Envelope(
-            subject: "{$this->user->name} accepted your invitation to {$targetName}",
+            subject: "{$userName} accepted your invitation to {$targetName}",
         );
     }
 

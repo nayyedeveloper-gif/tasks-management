@@ -41,6 +41,9 @@ Route::get('/dashboard', function () {
     return redirect()->route('home');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
+// Invitation accept route (accessible without authentication)
+Route::get('/invitations/accept/{token}', [InvitationController::class, 'accept'])->name('invitations.accept');
+
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -205,7 +208,6 @@ Route::middleware('auth')->group(function () {
 
     // Invitation routes
     Route::post('/invitations', [InvitationController::class, 'store'])->name('invitations.store');
-    Route::get('/invitations/accept/{token}', [InvitationController::class, 'accept'])->name('invitations.accept');
 
     // Channel routes
     Route::get('/channels', [ChannelController::class, 'index'])->name('channels.index');

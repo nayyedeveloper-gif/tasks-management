@@ -19,8 +19,13 @@
         </div>
         <div class="content">
             <p>Hello,</p>
-            <p><strong>{{ $user->name }}</strong> has accepted your invitation to join {{ $invitation->team ? 'the team' : 'the workspace' }} <strong>{{ $invitation->team ? $invitation->team->name : ($invitation->space ? $invitation->space->name : 'the workspace') }}</strong>.</p>
-            <p>They now have access and can start collaborating on projects.</p>
+            @if($user)
+                <p><strong>{{ $user->name }}</strong> has accepted your invitation to join {{ $invitation->team ? 'the team' : 'the workspace' }} <strong>{{ $invitation->team ? $invitation->team->name : ($invitation->space ? $invitation->space->name : 'the workspace') }}</strong>.</p>
+                <p>They now have access and can start collaborating on projects.</p>
+            @else
+                <p>Your invitation to <strong>{{ $invitation->email }}</strong> to join {{ $invitation->team ? 'the team' : 'the workspace' }} <strong>{{ $invitation->team ? $invitation->team->name : ($invitation->space ? $invitation->space->name : 'the workspace') }}</strong> has been accepted.</p>
+                <p>They will need to register to access the workspace.</p>
+            @endif
             @if($invitation->team)
                 <a href="{{ config('app.url') }}/teams/{{ $invitation->team->id }}" class="button">View Team</a>
             @elseif($invitation->space)
