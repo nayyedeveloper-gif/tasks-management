@@ -238,6 +238,13 @@ Route::middleware('auth')->group(function () {
     Route::middleware('permission:users.manage')->group(function () {
         Route::put('/users/{user}/role', [UsersController::class, 'updateRole'])->name('users.update-role');
     });
+
+    // Permissions management (admin only)
+    Route::middleware('permission:users.manage')->group(function () {
+        Route::get('/permissions', [PermissionsController::class, 'index'])->name('permissions.index');
+        Route::post('/permissions/role', [PermissionsController::class, 'updateRolePermissions'])->name('permissions.update-role');
+        Route::post('/permissions/user', [PermissionsController::class, 'updateUserRole'])->name('permissions.update-user');
+    });
     Route::post('/users/{user}/toggle-active', [UsersController::class, 'toggleActive'])->name('users.toggle-active');
 });
 

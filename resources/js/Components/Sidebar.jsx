@@ -17,18 +17,18 @@ import {
     UserCheck,
     CalendarClock,
     ListChecks,
-    Star,
     Hash,
     UserPlus,
     Search,
     Layers,
     Folder as FolderIcon,
     List as ListIcon,
-    Briefcase,
+    Star,
+    LogOut,
     Target,
     BarChart3,
-    LogOut,
-    Settings,
+    Briefcase,
+    Shield,
 } from 'lucide-react';
 
 const railItems = [
@@ -40,6 +40,7 @@ const railItems = [
     { id: 'dashboards', label: 'Dash', icon: BarChart3, route: 'dashboards.index' },
     { id: 'crm', label: 'CRM', icon: Briefcase, route: 'crm.contacts.index' },
     { id: 'users', label: 'Users', icon: UserCheck, route: 'users.index', adminOnly: true },
+    { id: 'permissions', label: 'Permissions', icon: Shield, route: 'permissions.index', adminOnly: true },
 ];
 
 const homeMenu = [
