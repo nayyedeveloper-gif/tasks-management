@@ -1,4 +1,4 @@
-import { router, useForm } from '@inertiajs/react';
+import { Link, router, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 import CrmShell from '@/Components/CrmShell';
 import { Plus, Trash2, Search, X, Globe, Mail, Phone, Building2 } from 'lucide-react';
@@ -74,9 +74,10 @@ export default function Companies({ companies, filters }) {
                     </div>
                 )}
                 {companies.map((c) => (
-                    <div
+                    <Link
                         key={c.id}
-                        className="bg-neutral-900 border border-neutral-800 rounded-lg p-4 hover:border-neutral-700 group"
+                        href={route('companies.show', c.id)}
+                        className="bg-neutral-900 border border-neutral-800 rounded-lg p-4 hover:border-neutral-700 group block"
                     >
                         <div className="flex items-start gap-3 mb-3">
                             <div
@@ -92,7 +93,7 @@ export default function Companies({ companies, filters }) {
                                 )}
                             </div>
                             <button
-                                onClick={() => remove(c.id)}
+                                onClick={(e) => { e.preventDefault(); e.stopPropagation(); remove(c.id); }}
                                 className="text-neutral-500 hover:text-red-400 opacity-0 group-hover:opacity-100"
                             >
                                 <Trash2 size={14} />
@@ -121,7 +122,7 @@ export default function Companies({ companies, filters }) {
                             <span>{c.contacts_count ?? 0} contacts</span>
                             <span>{c.deals_count ?? 0} deals</span>
                         </div>
-                    </div>
+                    </Link>
                 ))}
             </div>
 

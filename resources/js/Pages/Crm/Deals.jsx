@@ -14,6 +14,7 @@ export default function Deals({ pipeline, pipelines, deals, companies, contacts 
     const [showCreate, setShowCreate] = useState(false);
     const [createInStage, setCreateInStage] = useState(null);
     const [draggingId, setDraggingId] = useState(null);
+    const [editingDeal, setEditingDeal] = useState(null);
 
     const form = useForm({
         pipeline_id: pipeline.id,
@@ -26,6 +27,40 @@ export default function Deals({ pipeline, pipelines, deals, companies, contacts 
         contact_id: '',
         notes: '',
     });
+
+    const editForm = useForm({
+        title: '',
+        amount: '',
+        currency: 'USD',
+        pipeline_stage_id: '',
+        expected_close_date: '',
+        company_id: '',
+        contact_id: '',
+        notes: '',
+    });
+
+    const openEdit = (deal) => {
+        setEditingDeal(deal);
+        editForm.setData({
+            title: deal.title || '',
+            amount: deal.amount || '',
+            currency: deal.currency || 'USD',
+            pipeline_stage_id: deal.pipeline_stage_id,
+            expected_close_date: deal.expected_close_date || '',
+            company_id: deal.company_id || '',
+            contact_id: deal.contact_id || '',
+            notes: deal.notes || '',
+        });
+    };
+
+    const submitEdit = (e) => {
+        e.preventDefault();
+        if (!editingDeal) return;
+        editForm.put(route('deals.update', editingDeal.id), {
+            preserveScroll: true,
+            onSuccess: () => setEditingDeal(null),
+        });
+    };
 
     const dealsByStage = useMemo(() => {
         const map = {};
@@ -166,12 +201,13 @@ export default function Deals({ pipeline, pipelines, deals, companies, contacts 
                                         key={deal.id}
                                         draggable
                                         onDragStart={() => onDragStart(deal.id)}
-                                        className="bg-neutral-800/60 hover:bg-neutral-800 border border-neutral-800 rounded-md p-3 group cursor-grab active:cursor-grabbing"
+                                        onClick={() => openEdit(deal)}
+                                        className="bg-neutral-800/60 hover:bg-neutral-800 border border-neutral-800 rounded-md p-3 group cursor-pointer"
                                     >
                                         <div className="flex items-start justify-between mb-2">
                                             <span className="text-sm font-medium">{deal.title}</span>
                                             <button
-                                                onClick={() => remove(deal.id)}
+                                                onClick={(e) => { e.stopPropagation(); remove(deal.id); }}
                                                 className="text-neutral-500 hover:text-red-400 opacity-0 group-hover:opacity-100"
                                             >
                                                 <Trash2 size={12} />
@@ -241,7 +277,7 @@ export default function Deals({ pipeline, pipelines, deals, companies, contacts 
                                         onChange={(e) => form.setData('currency', e.target.value)}
                                         className="ipt"
                                     >
-                                        {['USD','EUR','GBP','MMK','SGD','JPY'].map((c) => (
+                                        {['USD','MMK'].map((c) => (
                                             <option key={c} value={c}>{c}</option>
                                         ))}
                                     </select>
@@ -310,6 +346,139 @@ export default function Deals({ pipeline, pipelines, deals, companies, contacts 
                                 <button type="submit" disabled={form.processing} className="px-4 py-2 text-sm rounded-md bg-purple-600 hover:bg-purple-500 disabled:opacity-50">
                                     Create deal
                                 </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Edit modal */}
+            {editingDeal && (
+                <div
+                    className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50"
+                    onMouseDown={() => setEditingDeal(null)}
+                >
+                    <div
+                        onMouseDown={(e) => e.stopPropagation()}
+                        className="bg-neutral-900 border border-neutral-800 rounded-xl w-[560px] max-w-full p-6 max-h-[90vh] overflow-y-auto"
+                    >
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-semibold">Edit deal</h3>
+                            <button onClick={() => setEditingDeal(null)} className="text-neutral-400 hover:text-white">
+                                <X size={18} />
+                            </button>
+                        </div>
+                        <form onSubmit={submitEdit} className="space-y-3">
+                            <Field label="Title" required>
+                                <input
+                                    autoFocus
+                                    value={editForm.data.title}
+                                    onChange={(e) => editForm.setData('title', e.target.value)}
+                                    required
+                                    className="ipt"
+                                />
+                            </Field>
+                            <div className="grid grid-cols-2 gap-3">
+                                <Field label="Amount">
+                                    <input
+                                        type="number"
+                                        step="0.01"
+                                        value={editForm.data.amount}
+                                        onChange={(e) => editForm.setData('amount', e.target.value)}
+                                        className="ipt"
+                                    />
+                                </Field>
+                                <Field label="Currency">
+                                    <select
+                                        value={editForm.data.currency}
+                                        onChange={(e) => editForm.setData('currency', e.target.value)}
+                                        className="ipt"
+                                    >
+                                        {['USD','MMK'].map((c) => (
+                                            <option key={c} value={c}>{c}</option>
+                                        ))}
+                                    </select>
+                                </Field>
+                            </div>
+                            <Field label="Stage">
+                                <select
+                                    value={editForm.data.pipeline_stage_id}
+                                    onChange={(e) => editForm.setData('pipeline_stage_id', e.target.value)}
+                                    required
+                                    className="ipt"
+                                >
+                                    {pipeline.stages.map((s) => (
+                                        <option key={s.id} value={s.id}>{s.name}</option>
+                                    ))}
+                                </select>
+                            </Field>
+                            <div className="grid grid-cols-2 gap-3">
+                                <Field label="Company">
+                                    <select
+                                        value={editForm.data.company_id}
+                                        onChange={(e) => editForm.setData('company_id', e.target.value)}
+                                        className="ipt"
+                                    >
+                                        <option value="">—</option>
+                                        {companies.map((c) => (
+                                            <option key={c.id} value={c.id}>{c.name}</option>
+                                        ))}
+                                    </select>
+                                </Field>
+                                <Field label="Primary contact">
+                                    <select
+                                        value={editForm.data.contact_id}
+                                        onChange={(e) => editForm.setData('contact_id', e.target.value)}
+                                        className="ipt"
+                                    >
+                                        <option value="">—</option>
+                                        {contacts.map((c) => (
+                                            <option key={c.id} value={c.id}>
+                                                {c.first_name} {c.last_name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </Field>
+                            </div>
+                            <Field label="Expected close date">
+                                <input
+                                    type="date"
+                                    value={editForm.data.expected_close_date || ''}
+                                    onChange={(e) => editForm.setData('expected_close_date', e.target.value)}
+                                    className="ipt"
+                                />
+                            </Field>
+                            <Field label="Notes">
+                                <textarea
+                                    rows={3}
+                                    value={editForm.data.notes}
+                                    onChange={(e) => editForm.setData('notes', e.target.value)}
+                                    className="ipt"
+                                />
+                            </Field>
+                            <div className="flex justify-between items-center pt-2">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        if (confirm('Delete this deal?')) {
+                                            router.delete(route('deals.destroy', editingDeal.id), {
+                                                preserveScroll: true,
+                                                onSuccess: () => setEditingDeal(null),
+                                            });
+                                        }
+                                    }}
+                                    className="flex items-center gap-1 text-sm text-red-400 hover:text-red-300"
+                                >
+                                    <Trash2 size={14} /> Delete
+                                </button>
+                                <div className="flex gap-2">
+                                    <button type="button" onClick={() => setEditingDeal(null)} className="px-3 py-2 text-sm text-neutral-300 hover:text-white">
+                                        Cancel
+                                    </button>
+                                    <button type="submit" disabled={editForm.processing} className="px-4 py-2 text-sm rounded-md bg-purple-600 hover:bg-purple-500 disabled:opacity-50">
+                                        Save changes
+                                    </button>
+                                </div>
                             </div>
                         </form>
                     </div>

@@ -139,11 +139,13 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/crm/companies', [CompanyController::class, 'index'])->name('companies.index');
     Route::post('/crm/companies', [CompanyController::class, 'store'])->name('companies.store');
+    Route::get('/crm/companies/{company}', [CompanyController::class, 'show'])->name('companies.show');
     Route::put('/crm/companies/{company}', [CompanyController::class, 'update'])->name('companies.update');
     Route::delete('/crm/companies/{company}', [CompanyController::class, 'destroy'])->name('companies.destroy');
 
     Route::get('/crm/deals', [DealController::class, 'index'])->name('deals.index');
     Route::post('/crm/deals', [DealController::class, 'store'])->name('deals.store');
+    Route::get('/crm/deals/{deal}', [DealController::class, 'show'])->name('deals.show');
     Route::put('/crm/deals/{deal}', [DealController::class, 'update'])->name('deals.update');
     Route::delete('/crm/deals/{deal}', [DealController::class, 'destroy'])->name('deals.destroy');
 

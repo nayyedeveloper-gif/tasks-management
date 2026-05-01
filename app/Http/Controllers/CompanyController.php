@@ -34,6 +34,24 @@ class CompanyController extends Controller
         return back();
     }
 
+    public function show(Company $company): Response
+    {
+        $company->load([
+            'owner:id,name',
+            'contacts' => fn ($q) => $q->orderByDesc('created_at'),
+            'contacts.owner:id,name',
+            'deals' => fn ($q) => $q->orderByDesc('created_at'),
+            'deals.stage',
+            'deals.contact:id,first_name,last_name',
+            'activities' => fn ($q) => $q->orderByDesc('happened_at'),
+            'activities.user:id,name',
+        ]);
+
+        return Inertia::render('Crm/CompanyDetail', [
+            'company' => $company,
+        ]);
+    }
+
     public function update(Request $request, Company $company): RedirectResponse
     {
         $company->update($this->validateData($request, true));

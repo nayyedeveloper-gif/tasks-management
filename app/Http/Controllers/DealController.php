@@ -51,6 +51,30 @@ class DealController extends Controller
         return back();
     }
 
+    public function show(Request $request, Deal $deal)
+    {
+        $deal->load([
+            'pipeline.stages',
+            'stage',
+            'company:id,name,color',
+            'contact:id,first_name,last_name',
+            'owner:id,name',
+            'activities' => fn ($q) => $q->orderByDesc('happened_at'),
+            'activities.user:id,name',
+        ]);
+
+        if ($request->wantsJson() && ! $request->header('X-Inertia')) {
+            return response()->json(['deal' => $deal]);
+        }
+
+        return Inertia::render('Crm/DealDetail', [
+            'deal' => $deal,
+            'companies' => Company::orderBy('name')->get(['id', 'name', 'color']),
+            'contacts' => Contact::orderBy('first_name')->get(['id', 'first_name', 'last_name', 'company_id']),
+            'users' => User::orderBy('name')->get(['id', 'name']),
+        ]);
+    }
+
     public function update(Request $request, Deal $deal): RedirectResponse
     {
         $validated = $this->validateData($request, true);
