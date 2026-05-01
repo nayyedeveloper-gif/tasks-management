@@ -29,6 +29,7 @@ import {
     BarChart3,
     Briefcase,
     Shield,
+    Settings,
 } from 'lucide-react';
 
 const railItems = [
@@ -559,12 +560,12 @@ function ProfileMenu({ user, initial }) {
                         </Link>
                         {(user?.role === 'admin' || user?.role === 'owner' || user?.role_id === 1) && (
                             <Link
-                                href={route('permissions.index')}
+                                href={route('users.index')}
                                 onClick={() => setOpen(false)}
                                 className="flex items-center gap-2 px-4 py-2 text-sm text-neutral-200 hover:bg-neutral-800"
                             >
                                 <Shield size={14} className="text-neutral-400" />
-                                <span>Permissions</span>
+                                <span>Users & Permissions</span>
                             </Link>
                         )}
                         <button
