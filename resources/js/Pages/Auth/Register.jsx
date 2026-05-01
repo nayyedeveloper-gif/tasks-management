@@ -20,13 +20,14 @@ function passwordStrength(pw) {
     return { score, ...map[score] };
 }
 
-export default function Register() {
+export default function Register({ email = '', token = '' }) {
     const [showPassword, setShowPassword] = useState(false);
     const { data, setData, post, processing, errors, reset } = useForm({
         name: '',
-        email: '',
+        email: email || '',
         password: '',
         password_confirmation: '',
+        token: token || '',
     });
 
     const submit = (e) => {

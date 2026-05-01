@@ -19,9 +19,24 @@ class RegisteredUserController extends Controller
     /**
      * Display the registration view.
      */
-    public function create(): Response
+    public function create(Request $request): Response
     {
-        return Inertia::render('Auth/Register');
+        $email = '';
+        if ($request->has('token')) {
+            $invitation = \App\Models\Invitation::where('token', $request->token)
+                ->where('status', 'pending')
+                ->where('expires_at', '>', now())
+                ->first();
+            
+            if ($invitation) {
+                $email = $invitation->email;
+            }
+        }
+
+        return Inertia::render('Auth/Register', [
+            'email' => $email,
+            'token' => $request->token,
+        ]);
     }
 
     /**
@@ -35,6 +50,7 @@ class RegisteredUserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'token' => 'nullable|string|exists:invitations,token',
         ]);
 
         $user = User::create([
@@ -46,6 +62,35 @@ class RegisteredUserController extends Controller
         event(new Registered($user));
 
         Auth::login($user);
+
+        // Handle invitation if token is present
+        if ($request->filled('token')) {
+            $invitation = \App\Models\Invitation::where('token', $request->token)
+                ->where('status', 'pending')
+                ->where('expires_at', '>', now())
+                ->first();
+
+            if ($invitation) {
+                // Auto-accept the invitation
+                $invitation->update([
+                    'accepted_at' => now(),
+                    'status' => 'accepted',
+                    'user_id' => $user->id,
+                ]);
+
+                // Assign role to user
+                $user->update([
+                    'role' => $invitation->role,
+                    'role_id' => $invitation->role === 'admin' ? 1 : 2,
+                ]);
+
+                // Add user to space if space_id exists
+                if ($invitation->space_id) {
+                    $invitation->space->users()->syncWithoutDetaching([$user->id]);
+                    return redirect()->route('spaces.show', $invitation->space_id)->with('success', 'Registration successful! You have been added to the space.');
+                }
+            }
+        }
 
         return redirect(route('dashboard', absolute: false));
     }

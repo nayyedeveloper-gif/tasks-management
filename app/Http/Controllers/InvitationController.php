@@ -46,12 +46,7 @@ class InvitationController extends Controller
             ->where('expires_at', '>', now())
             ->firstOrFail();
 
-        $invitation->update([
-            'accepted_at' => now(),
-            'status' => 'accepted',
-        ]);
-
-        // Check if user exists or create them
+        // Check if user exists
         $user = User::where('email', $invitation->email)->first();
 
         if (!$user) {
@@ -59,8 +54,18 @@ class InvitationController extends Controller
             return redirect()->route('register', ['token' => $token])->with('info', 'Please create an account to accept the invitation.');
         }
 
+        // Auto-accept the invitation
+        $invitation->update([
+            'accepted_at' => now(),
+            'status' => 'accepted',
+            'user_id' => $user->id,
+        ]);
+
         // Assign role to user
-        $user->update(['role' => $invitation->role]);
+        $user->update([
+            'role' => $invitation->role,
+            'role_id' => $invitation->role === 'admin' ? 1 : 2,
+        ]);
 
         // Add user to space if space_id exists
         if ($invitation->space_id) {
@@ -70,7 +75,21 @@ class InvitationController extends Controller
         // Send confirmation email to inviter
         $inviter = User::find($invitation->invited_by);
         if ($inviter) {
-            Mail::to($inviter->email)->send(new InvitationAcceptedMail($invitation, $user));
+            try {
+                Mail::to($inviter->email)->send(new InvitationAcceptedMail($invitation, $user));
+            } catch (\Exception $e) {
+                // Log or ignore mail errors
+            }
+        }
+
+        // Auto login if not logged in
+        if (!auth()->check()) {
+            auth()->login($user);
+        }
+
+        // Redirect to the invited space or dashboard
+        if ($invitation->space_id) {
+            return redirect()->route('spaces.show', $invitation->space_id)->with('success', 'Invitation accepted! You have been added to the space.');
         }
 
         return redirect()->route('dashboard')->with('success', 'Invitation accepted successfully.');
