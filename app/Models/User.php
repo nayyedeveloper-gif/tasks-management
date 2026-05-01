@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password', 'role', 'title', 'avatar_color'])]
+#[Fillable(['name', 'email', 'password', 'role', 'title', 'avatar_color', 'role_id'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -42,5 +42,28 @@ class User extends Authenticatable
     public function assignedTasks(): HasMany
     {
         return $this->hasMany(Task::class, 'assigned_to');
+    }
+
+    public function role()
+    {
+        return $this->belongsTo(Role::class);
+    }
+
+    public function hasPermission(string $permissionSlug): bool
+    {
+        if (!$this->role) {
+            return false;
+        }
+
+        return $this->role->permissions()->where('slug', $permissionSlug)->exists();
+    }
+
+    public function hasAnyPermission(array $permissionSlugs): bool
+    {
+        if (!$this->role) {
+            return false;
+        }
+
+        return $this->role->permissions()->whereIn('slug', $permissionSlugs)->exists();
     }
 }

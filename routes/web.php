@@ -67,10 +67,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/all-tasks', [AllTasksController::class, 'index'])->name('all-tasks');
 
     // Invite
-    Route::get('/invite', [InviteController::class, 'index'])->name('invite.index');
-    Route::post('/invite', [InviteController::class, 'store'])->name('invite.store');
-    Route::post('/invite/{invitation}/resend', [InviteController::class, 'resend'])->name('invite.resend');
-    Route::delete('/invite/{invitation}', [InviteController::class, 'destroy'])->name('invite.destroy');
+    Route::middleware('permission:teams.invite')->group(function () {
+        Route::get('/invite', [InviteController::class, 'index'])->name('invite.index');
+        Route::post('/invite', [InviteController::class, 'store'])->name('invite.store');
+        Route::post('/invite/{invitation}/resend', [InviteController::class, 'resend'])->name('invite.resend');
+        Route::delete('/invite/{invitation}', [InviteController::class, 'destroy'])->name('invite.destroy');
+    });
 
     // Space routes
     Route::get('/spaces', [SpaceController::class, 'index'])->name('spaces.index');
@@ -122,32 +124,47 @@ Route::middleware('auth')->group(function () {
     Route::delete('/statuses/{status}', [TaskStatusController::class, 'destroy'])->name('statuses.destroy');
 
     // Teams
-    Route::get('/teams', [TeamController::class, 'index'])->name('teams.index');
-    Route::post('/teams', [TeamController::class, 'store'])->name('teams.store');
-    Route::put('/teams/{team}', [TeamController::class, 'update'])->name('teams.update');
-    Route::delete('/teams/{team}', [TeamController::class, 'destroy'])->name('teams.destroy');
-    Route::post('/teams/{team}/members', [TeamController::class, 'addMember'])->name('teams.members.add');
-    Route::put('/teams/{team}/members/{user}', [TeamController::class, 'updateMember'])->name('teams.members.update');
-    Route::delete('/teams/{team}/members/{user}', [TeamController::class, 'removeMember'])->name('teams.members.remove');
+    Route::middleware('permission:teams.view')->group(function () {
+        Route::get('/teams', [TeamController::class, 'index'])->name('teams.index');
+    });
+
+    Route::middleware('permission:teams.manage')->group(function () {
+        Route::post('/teams', [TeamController::class, 'store'])->name('teams.store');
+        Route::get('/teams/{team}', [TeamController::class, 'show'])->name('teams.show');
+        Route::put('/teams/{team}', [TeamController::class, 'update'])->name('teams.update');
+        Route::delete('/teams/{team}', [TeamController::class, 'destroy'])->name('teams.destroy');
+        Route::post('/teams/{team}/members', [TeamController::class, 'addMember'])->name('teams.members.add');
+        Route::put('/teams/{team}/members/{user}', [TeamController::class, 'updateMember'])->name('teams.members.update');
+        Route::delete('/teams/{team}/members/{user}', [TeamController::class, 'removeMember'])->name('teams.members.remove');
+    });
 
     // CRM
-    Route::get('/crm/contacts', [ContactController::class, 'index'])->name('contacts.index');
-    Route::post('/crm/contacts', [ContactController::class, 'store'])->name('contacts.store');
-    Route::get('/crm/contacts/{contact}', [ContactController::class, 'show'])->name('contacts.show');
-    Route::put('/crm/contacts/{contact}', [ContactController::class, 'update'])->name('contacts.update');
-    Route::delete('/crm/contacts/{contact}', [ContactController::class, 'destroy'])->name('contacts.destroy');
+    Route::middleware('permission:crm.view')->group(function () {
+        Route::get('/crm/contacts', [ContactController::class, 'index'])->name('crm.contacts.index');
+        Route::get('/crm/companies', [CompanyController::class, 'index'])->name('crm.companies.index');
+        Route::get('/crm/deals', [DealController::class, 'index'])->name('crm.deals.index');
+    });
 
-    Route::get('/crm/companies', [CompanyController::class, 'index'])->name('companies.index');
-    Route::post('/crm/companies', [CompanyController::class, 'store'])->name('companies.store');
-    Route::get('/crm/companies/{company}', [CompanyController::class, 'show'])->name('companies.show');
-    Route::put('/crm/companies/{company}', [CompanyController::class, 'update'])->name('companies.update');
-    Route::delete('/crm/companies/{company}', [CompanyController::class, 'destroy'])->name('companies.destroy');
+    Route::middleware('permission:crm.contacts.manage')->group(function () {
+        Route::post('/crm/contacts', [ContactController::class, 'store'])->name('crm.contacts.store');
+        Route::get('/crm/contacts/{contact}', [ContactController::class, 'show'])->name('crm.contacts.show');
+        Route::put('/crm/contacts/{contact}', [ContactController::class, 'update'])->name('crm.contacts.update');
+        Route::delete('/crm/contacts/{contact}', [ContactController::class, 'destroy'])->name('crm.contacts.destroy');
+    });
 
-    Route::get('/crm/deals', [DealController::class, 'index'])->name('deals.index');
-    Route::post('/crm/deals', [DealController::class, 'store'])->name('deals.store');
-    Route::get('/crm/deals/{deal}', [DealController::class, 'show'])->name('deals.show');
-    Route::put('/crm/deals/{deal}', [DealController::class, 'update'])->name('deals.update');
-    Route::delete('/crm/deals/{deal}', [DealController::class, 'destroy'])->name('deals.destroy');
+    Route::middleware('permission:crm.companies.manage')->group(function () {
+        Route::post('/crm/companies', [CompanyController::class, 'store'])->name('crm.companies.store');
+        Route::get('/crm/companies/{company}', [CompanyController::class, 'show'])->name('crm.companies.show');
+        Route::put('/crm/companies/{company}', [CompanyController::class, 'update'])->name('crm.companies.update');
+        Route::delete('/crm/companies/{company}', [CompanyController::class, 'destroy'])->name('crm.companies.destroy');
+    });
+
+    Route::middleware('permission:crm.deals.manage')->group(function () {
+        Route::post('/crm/deals', [DealController::class, 'store'])->name('crm.deals.store');
+        Route::get('/crm/deals/{deal}', [DealController::class, 'show'])->name('crm.deals.show');
+        Route::put('/crm/deals/{deal}', [DealController::class, 'update'])->name('crm.deals.update');
+        Route::delete('/crm/deals/{deal}', [DealController::class, 'destroy'])->name('crm.deals.destroy');
+    });
 
     Route::post('/crm/activities', [CrmActivityController::class, 'store'])->name('crm.activities.store');
     Route::delete('/crm/activities/{activity}', [CrmActivityController::class, 'destroy'])->name('crm.activities.destroy');
@@ -161,19 +178,29 @@ Route::middleware('auth')->group(function () {
     Route::delete('/goal-folders/{folder}', [GoalController::class, 'destroyFolder'])->name('goal-folders.destroy');
 
     // Planner
-    Route::get('/planner', [PlannerController::class, 'index'])->name('planner.index');
-    Route::post('/planner/blocks', [PlannerController::class, 'storeBlock'])->name('planner.blocks.store');
-    Route::put('/planner/blocks/{block}', [PlannerController::class, 'updateBlock'])->name('planner.blocks.update');
-    Route::delete('/planner/blocks/{block}', [PlannerController::class, 'destroyBlock'])->name('planner.blocks.destroy');
+    Route::middleware('permission:planner.view')->group(function () {
+        Route::get('/planner', [PlannerController::class, 'index'])->name('planner.index');
+    });
+
+    Route::middleware('permission:planner.manage')->group(function () {
+        Route::post('/planner/blocks', [PlannerController::class, 'storeBlock'])->name('planner.blocks.store');
+        Route::put('/planner/blocks/{block}', [PlannerController::class, 'updateBlock'])->name('planner.blocks.update');
+        Route::delete('/planner/blocks/{block}', [PlannerController::class, 'destroyBlock'])->name('planner.blocks.destroy');
+    });
 
     // Dashboards
-    Route::get('/dashboards', [DashboardController::class, 'index'])->name('dashboards.index');
-    Route::post('/dashboards', [DashboardController::class, 'store'])->name('dashboards.store');
-    Route::get('/dashboards/{dashboard}', [DashboardController::class, 'show'])->name('dashboards.show');
-    Route::put('/dashboards/{dashboard}', [DashboardController::class, 'update'])->name('dashboards.update');
-    Route::delete('/dashboards/{dashboard}', [DashboardController::class, 'destroy'])->name('dashboards.destroy');
-    Route::post('/dashboards/{dashboard}/widgets', [DashboardController::class, 'storeWidget'])->name('dashboards.widgets.store');
-    Route::delete('/widgets/{widget}', [DashboardController::class, 'destroyWidget'])->name('dashboards.widgets.destroy');
+    Route::middleware('permission:dashboards.view')->group(function () {
+        Route::get('/dashboards', [DashboardController::class, 'index'])->name('dashboards.index');
+        Route::get('/dashboards/{dashboard}', [DashboardController::class, 'show'])->name('dashboards.show');
+    });
+
+    Route::middleware('permission:dashboards.manage')->group(function () {
+        Route::post('/dashboards', [DashboardController::class, 'store'])->name('dashboards.store');
+        Route::put('/dashboards/{dashboard}', [DashboardController::class, 'update'])->name('dashboards.update');
+        Route::delete('/dashboards/{dashboard}', [DashboardController::class, 'destroy'])->name('dashboards.destroy');
+        Route::post('/dashboards/{dashboard}/widgets', [DashboardController::class, 'storeWidget'])->name('dashboards.widgets.store');
+        Route::delete('/widgets/{widget}', [DashboardController::class, 'destroyWidget'])->name('dashboards.widgets.destroy');
+    });
 
     // Invitation routes
     Route::post('/invitations', [InvitationController::class, 'store'])->name('invitations.store');
@@ -201,8 +228,13 @@ Route::middleware('auth')->group(function () {
     Route::get('/api/users/search', [MessageController::class, 'searchUsers'])->name('users.search');
 
     // User management (admin only)
-    Route::get('/users', [UsersController::class, 'index'])->name('users.index');
-    Route::put('/users/{user}/role', [UsersController::class, 'updateRole'])->name('users.update-role');
+    Route::middleware('permission:users.view')->group(function () {
+        Route::get('/users', [UsersController::class, 'index'])->name('users.index');
+    });
+
+    Route::middleware('permission:users.manage')->group(function () {
+        Route::put('/users/{user}/role', [UsersController::class, 'updateRole'])->name('users.update-role');
+    });
     Route::post('/users/{user}/toggle-active', [UsersController::class, 'toggleActive'])->name('users.toggle-active');
 });
 
