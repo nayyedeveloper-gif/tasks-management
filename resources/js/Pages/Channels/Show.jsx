@@ -268,6 +268,7 @@ export default function ChannelShow({ channel }) {
                         channelId={channel.id}
                         replyTo={replyTo}
                         onCancelReply={() => setReplyTo(null)}
+                        onSent={(msg) => setMessages((prev) => [...prev, msg])}
                         placeholder={`Message #${channel.name}`}
                     />
                 </div>

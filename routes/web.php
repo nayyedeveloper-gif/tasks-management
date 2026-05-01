@@ -230,22 +230,13 @@ Route::middleware('auth')->group(function () {
     // Mention autocomplete (user search)
     Route::get('/api/users/search', [MessageController::class, 'searchUsers'])->name('users.search');
 
-    // User management (admin only)
-    Route::middleware('permission:users.view')->group(function () {
+    // User & Permissions management (admin only)
+    Route::middleware('permission:users.manage')->group(function () {
         Route::get('/users', [UsersController::class, 'index'])->name('users.index');
-    });
-
-    Route::middleware('permission:users.manage')->group(function () {
         Route::put('/users/{user}/role', [UsersController::class, 'updateRole'])->name('users.update-role');
+        Route::post('/users/{user}/toggle-active', [UsersController::class, 'toggleActive'])->name('users.toggle-active');
+        Route::post('/permissions/role', [UsersController::class, 'updateRolePermissions'])->name('permissions.update-role');
     });
-
-    // Permissions management (admin only)
-    Route::middleware('permission:users.manage')->group(function () {
-        Route::get('/permissions', [PermissionsController::class, 'index'])->name('permissions.index');
-        Route::post('/permissions/role', [PermissionsController::class, 'updateRolePermissions'])->name('permissions.update-role');
-        Route::post('/permissions/user', [PermissionsController::class, 'updateUserRole'])->name('permissions.update-user');
-    });
-    Route::post('/users/{user}/toggle-active', [UsersController::class, 'toggleActive'])->name('users.toggle-active');
 });
 
 require __DIR__.'/auth.php';

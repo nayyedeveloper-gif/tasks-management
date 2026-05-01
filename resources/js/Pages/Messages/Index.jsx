@@ -239,6 +239,7 @@ export default function MessagesIndex({ conversations, partner: initialPartner, 
                                     receiverId={partner.id}
                                     replyTo={replyTo}
                                     onCancelReply={() => setReplyTo(null)}
+                                    onSent={(msg) => setMessages((prev) => [...prev, msg])}
                                     placeholder={`Message ${partner.name}`}
                                 />
                             </>

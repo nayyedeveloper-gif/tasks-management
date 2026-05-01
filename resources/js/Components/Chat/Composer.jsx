@@ -145,12 +145,12 @@ export default function Composer({
         attachments.forEach((f) => form.append('attachments[]', f));
 
         try {
-            await axios.post(route('messages.store'), form, {
+            const res = await axios.post(route('messages.store'), form, {
                 headers: { 'Content-Type': 'multipart/form-data' },
             });
             reset();
             onCancelReply?.();
-            onSent?.();
+            onSent?.(res.data.message);
         } finally {
             setSending(false);
         }
