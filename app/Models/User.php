@@ -44,26 +44,26 @@ class User extends Authenticatable
         return $this->hasMany(Task::class, 'assigned_to');
     }
 
-    public function role()
+    public function roleModel()
     {
-        return $this->belongsTo(Role::class);
+        return $this->belongsTo(Role::class, 'role_id');
     }
 
     public function hasPermission(string $permissionSlug): bool
     {
-        if (!$this->role) {
+        if (!$this->roleModel) {
             return false;
         }
 
-        return $this->role->permissions()->where('slug', $permissionSlug)->exists();
+        return $this->roleModel->permissions()->where('slug', $permissionSlug)->exists();
     }
 
     public function hasAnyPermission(array $permissionSlugs): bool
     {
-        if (!$this->role) {
+        if (!$this->roleModel) {
             return false;
         }
 
-        return $this->role->permissions()->whereIn('slug', $permissionSlugs)->exists();
+        return $this->roleModel->permissions()->whereIn('slug', $permissionSlugs)->exists();
     }
 }
