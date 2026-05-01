@@ -84,10 +84,17 @@ class RegisteredUserController extends Controller
                     'role_id' => $invitation->role === 'admin' ? 1 : 2,
                 ]);
 
-                // Add user to space if space_id exists
+                // Add user to team if team_id exists
+                if ($invitation->team_id) {
+                    $team = \App\Models\Team::find($invitation->team_id);
+                    if ($team) {
+                        $team->members()->syncWithoutDetaching([$user->id => ['role' => 'member']]);
+                    }
+                }
+
+                // Redirect to the invited space or dashboard
                 if ($invitation->space_id) {
-                    $invitation->space->users()->syncWithoutDetaching([$user->id]);
-                    return redirect()->route('spaces.show', $invitation->space_id)->with('success', 'Registration successful! You have been added to the space.');
+                    return redirect()->route('spaces.show', $invitation->space_id)->with('success', 'Registration successful! You have been added to the workspace.');
                 }
             }
         }

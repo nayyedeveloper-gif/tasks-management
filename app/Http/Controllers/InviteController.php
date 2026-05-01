@@ -117,9 +117,12 @@ class InviteController extends Controller
             // Assign role to user
             $user->update(['role' => $invitation->role]);
 
-            // Add user to space if space_id exists
-            if ($invitation->space_id) {
-                $invitation->space->users()->syncWithoutDetaching([$user->id]);
+            // Add user to team if team_id exists
+            if ($invitation->team_id) {
+                $team = \App\Models\Team::find($invitation->team_id);
+                if ($team) {
+                    $team->members()->syncWithoutDetaching([$user->id => ['role' => 'member']]);
+                }
             }
         }
 
