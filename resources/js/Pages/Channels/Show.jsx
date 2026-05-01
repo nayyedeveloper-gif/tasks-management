@@ -153,7 +153,7 @@ export default function ChannelShow({ channel }) {
     const onDeleteChannel = () => {
         if (!confirm(`Delete channel #${channel.name}? This is permanent.`)) return;
         router.delete(route('channels.destroy', channel.id), {
-            onSuccess: () => router.visit(route('channels.index')),
+            preserveScroll: false,
         });
     };
 

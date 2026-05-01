@@ -86,6 +86,11 @@ class ChannelController extends Controller
 
     public function destroy(Channel $channel)
     {
+        // Only creator or admin can delete
+        if ($channel->created_by !== auth()->id() && auth()->user()->role_id !== 1) {
+            abort(403, 'You are not authorized to delete this channel.');
+        }
+
         $channel->delete();
 
         return redirect()->route('channels.index')->with('success', 'Channel deleted successfully.');
