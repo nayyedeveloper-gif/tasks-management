@@ -11,7 +11,7 @@ use App\Models\User;
 
 class TaskController extends Controller
 {
-    public function show(Task $task): Response
+    public function show(Request $request, Task $task)
     {
         $task->load([
             'list:id,name,space_id',
@@ -30,6 +30,15 @@ class TaskController extends Controller
 
         $statuses = \App\Models\TaskStatus::where('task_list_id', $task->task_list_id)
             ->get(['key', 'label', 'color', 'position']);
+
+        // Respond with JSON when requested (e.g., TaskDrawer AJAX fetch)
+        if ($request->wantsJson() && ! $request->header('X-Inertia')) {
+            return response()->json([
+                'task' => $task,
+                'tagsAvailable' => $tagsAvailable,
+                'statuses' => $statuses,
+            ]);
+        }
 
         return Inertia::render('Tasks/Show', [
             'task' => $task,
