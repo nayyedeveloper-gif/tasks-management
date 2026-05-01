@@ -37,7 +37,9 @@ class HandleInertiaRequests extends Middleware
         return [
             ...parent::share($request),
             'auth' => [
-                'user' => $request->user(),
+                'user' => $request->user() ? array_merge($request->user()->toArray(), [
+                    'role_id' => $request->user()->role_id,
+                ]) : null,
             ],
             'sidebar' => fn () => $request->user() ? $this->sidebarData($request) : null,
             'badges' => fn () => $request->user() ? $this->badges($request) : null,

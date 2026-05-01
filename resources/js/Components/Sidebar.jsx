@@ -247,7 +247,7 @@ export default function Sidebar() {
             {/* Icon rail */}
             <div className="w-14 bg-neutral-950 border-r border-neutral-800 flex flex-col items-center py-3">
                 <div className="flex flex-col gap-1 flex-1">
-                    {railItems.filter(item => !item.adminOnly || auth?.user?.role === 'owner' || auth?.user?.role === 'admin').map((item) => {
+                    {railItems.filter(item => !item.adminOnly || auth?.user?.role === 'owner' || auth?.user?.role === 'admin' || auth?.user?.role_id === 1).map((item) => {
                         const active = item.route ? isActive(item.route) : false;
                         const Icon = item.icon;
                         const button = (
@@ -558,6 +558,16 @@ function ProfileMenu({ user, initial }) {
                             <Settings size={14} className="text-neutral-400" />
                             <span>Profile Settings</span>
                         </Link>
+                        {(user?.role === 'admin' || user?.role === 'owner' || user?.role_id === 1) && (
+                            <Link
+                                href={route('permissions.index')}
+                                onClick={() => setOpen(false)}
+                                className="flex items-center gap-2 px-4 py-2 text-sm text-neutral-200 hover:bg-neutral-800"
+                            >
+                                <Shield size={14} className="text-neutral-400" />
+                                <span>Permissions</span>
+                            </Link>
+                        )}
                         <button
                             type="button"
                             onClick={() => { setOpen(false); router.post(route('logout')); }}
