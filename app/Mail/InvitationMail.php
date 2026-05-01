@@ -24,8 +24,10 @@ class InvitationMail extends Mailable
 
     public function envelope(): Envelope
     {
+        $targetName = $this->invitation->team ? $this->invitation->team->name : ($this->invitation->space ? $this->invitation->space->name : 'the workspace');
+        
         return new Envelope(
-            subject: "You're invited to join {$this->invitation->team->name}",
+            subject: "You're invited to join {$targetName}",
         );
     }
 

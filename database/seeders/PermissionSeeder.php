@@ -87,7 +87,7 @@ class PermissionSeeder extends Seeder
             'tasks.view', 'tasks.create', 'tasks.edit',
             'crm.view', 'crm.contacts.manage', 'crm.companies.manage', 'crm.deals.manage',
             'chat.view', 'chat.send',
-            'teams.view',
+            'teams.view', 'teams.invite',
             'spaces.view',
             'goals.view', 'goals.manage',
             'dashboards.view',

@@ -71,6 +71,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/invite', [InviteController::class, 'index'])->name('invite.index');
         Route::post('/invite', [InviteController::class, 'store'])->name('invite.store');
         Route::post('/invite/{invitation}/resend', [InviteController::class, 'resend'])->name('invite.resend');
+        Route::post('/invite/{invitation}/approve', [InviteController::class, 'approve'])->name('invite.approve');
         Route::delete('/invite/{invitation}', [InviteController::class, 'destroy'])->name('invite.destroy');
     });
 

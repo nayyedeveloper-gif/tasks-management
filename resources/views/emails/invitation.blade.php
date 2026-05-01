@@ -19,9 +19,9 @@
         </div>
         <div class="content">
             <p>Hello,</p>
-            <p><strong>{{ $inviter->name }}</strong> has invited you to join the team <strong>{{ $invitation->team->name }}</strong>.</p>
+            <p><strong>{{ $inviter->name }}</strong> has invited you to join {{ $invitation->team ? 'the team' : 'the workspace' }} <strong>{{ $invitation->team ? $invitation->team->name : ($invitation->space ? $invitation->space->name : 'the workspace') }}</strong>.</p>
             <p>Click the button below to accept the invitation and start collaborating.</p>
-            <a href="{{ config('app.url') }}/invite/{{ $invitation->token }}" class="button">Accept Invitation</a>
+            <a href="https://managers.29jewellery.com/invitations/accept/{{ $invitation->token }}" class="button">Accept Invitation</a>
             <p style="margin-top: 20px; font-size: 12px; color: #666;">
                 This invitation will expire in 7 days.
             </p>

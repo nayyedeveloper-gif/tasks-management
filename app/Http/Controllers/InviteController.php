@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\InvitationAcceptedMail;
 use App\Mail\InvitationMail;
 use App\Models\Invitation;
 use App\Models\Space;
@@ -53,12 +54,14 @@ class InviteController extends Controller
             'space_id' => $validated['space_id'] ?? null,
             'invited_by' => $request->user()->id,
             'expires_at' => now()->addDays(14),
+            'status' => 'pending',
         ]);
 
         // Best-effort email; never block the request
         try {
             if (class_exists(InvitationMail::class)) {
-                Mail::to($invitation->email)->send(new InvitationMail($invitation));
+                $inviter = $request->user();
+                Mail::to($invitation->email)->send(new InvitationMail($invitation, $inviter));
             }
         } catch (\Throwable $e) {
             // ignored
@@ -83,16 +86,53 @@ class InviteController extends Controller
             'token' => Str::random(48),
             'expires_at' => now()->addDays(14),
             'accepted_at' => null,
+            'status' => 'pending',
         ]);
 
         try {
             if (class_exists(InvitationMail::class)) {
-                Mail::to($invitation->email)->send(new InvitationMail($invitation));
+                $inviter = User::find($invitation->invited_by);
+                Mail::to($invitation->email)->send(new InvitationMail($invitation, $inviter));
             }
         } catch (\Throwable $e) {
             // ignore
         }
 
         return back()->with('success', 'Invitation resent.');
+    }
+
+    public function approve(Invitation $invitation): RedirectResponse
+    {
+        abort_unless($invitation->invited_by === request()->user()->id, 403);
+
+        $invitation->update([
+            'status' => 'accepted',
+            'accepted_at' => now(),
+        ]);
+
+        // Check if user exists
+        $user = User::where('email', $invitation->email)->first();
+
+        if ($user) {
+            // Assign role to user
+            $user->update(['role' => $invitation->role]);
+
+            // Add user to space if space_id exists
+            if ($invitation->space_id) {
+                $invitation->space->users()->syncWithoutDetaching([$user->id]);
+            }
+
+            // Send confirmation email to inviter
+            $inviter = User::find($invitation->invited_by);
+            if ($inviter && class_exists(InvitationAcceptedMail::class)) {
+                try {
+                    Mail::to($inviter->email)->send(new InvitationAcceptedMail($invitation, $user));
+                } catch (\Throwable $e) {
+                    // ignore
+                }
+            }
+        }
+
+        return back()->with('success', 'Invitation approved successfully.');
     }
 }

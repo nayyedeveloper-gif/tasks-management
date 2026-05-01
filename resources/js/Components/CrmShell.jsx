@@ -3,9 +3,9 @@ import Sidebar from '@/Components/Sidebar';
 import { Building2, Users, Target } from 'lucide-react';
 
 const TABS = [
-    { id: 'contacts', label: 'Contacts', icon: Users, route: 'contacts.index' },
-    { id: 'companies', label: 'Companies', icon: Building2, route: 'companies.index' },
-    { id: 'deals', label: 'Deals', icon: Target, route: 'deals.index' },
+    { id: 'contacts', label: 'Contacts', icon: Users, route: 'crm.contacts.index' },
+    { id: 'companies', label: 'Companies', icon: Building2, route: 'crm.companies.index' },
+    { id: 'deals', label: 'Deals', icon: Target, route: 'crm.deals.index' },
 ];
 
 export default function CrmShell({ active, children, actions }) {

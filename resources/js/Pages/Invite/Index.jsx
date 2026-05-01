@@ -1,10 +1,11 @@
 import { router, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import Sidebar from '@/Components/Sidebar';
-import { UserPlus, Copy, Check, RotateCw, Trash2, Mail } from 'lucide-react';
+import { UserPlus, Copy, Check, RotateCw, Trash2, Mail, CheckCircle } from 'lucide-react';
 
 function statusOf(inv) {
-    if (inv.accepted_at) return { label: 'Accepted', tone: 'bg-emerald-500/20 text-emerald-300' };
+    if (inv.status === 'accepted' || inv.accepted_at) return { label: 'Accepted', tone: 'bg-emerald-500/20 text-emerald-300' };
+    if (inv.status === 'rejected') return { label: 'Rejected', tone: 'bg-red-500/20 text-red-300' };
     if (inv.expires_at && new Date(inv.expires_at) < new Date())
         return { label: 'Expired', tone: 'bg-red-500/20 text-red-300' };
     return { label: 'Pending', tone: 'bg-yellow-500/20 text-yellow-300' };
@@ -42,6 +43,11 @@ export default function Invite({ invitations, members, spaces }) {
     const remove = (id) => {
         if (!confirm('Revoke this invitation?')) return;
         router.delete(route('invite.destroy', id), { preserveScroll: true });
+    };
+
+    const approve = (id) => {
+        if (!confirm('Approve this invitation?')) return;
+        router.post(route('invite.approve', id), {}, { preserveScroll: true });
     };
 
     return (
@@ -181,14 +187,23 @@ export default function Invite({ invitations, members, spaces }) {
                                                             <Copy size={14} />
                                                         )}
                                                     </button>
-                                                    {!inv.accepted_at && (
-                                                        <button
-                                                            onClick={() => resend(inv.id)}
-                                                            title="Resend"
-                                                            className="p-1.5 rounded hover:bg-neutral-800 text-neutral-400 hover:text-white"
-                                                        >
-                                                            <RotateCw size={14} />
-                                                        </button>
+                                                    {(inv.status === 'pending' || !inv.accepted_at) && (
+                                                        <>
+                                                            <button
+                                                                onClick={() => approve(inv.id)}
+                                                                title="Approve"
+                                                                className="p-1.5 rounded hover:bg-neutral-800 text-neutral-400 hover:text-emerald-400"
+                                                            >
+                                                                <CheckCircle size={14} />
+                                                            </button>
+                                                            <button
+                                                                onClick={() => resend(inv.id)}
+                                                                title="Resend"
+                                                                className="p-1.5 rounded hover:bg-neutral-800 text-neutral-400 hover:text-white"
+                                                            >
+                                                                <RotateCw size={14} />
+                                                            </button>
+                                                        </>
                                                     )}
                                                     <button
                                                         onClick={() => remove(inv.id)}

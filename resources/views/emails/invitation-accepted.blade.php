@@ -19,9 +19,13 @@
         </div>
         <div class="content">
             <p>Hello,</p>
-            <p><strong>{{ $user->name }}</strong> has accepted your invitation to join <strong>{{ $invitation->team->name }}</strong>.</p>
-            <p>They now have access to the team and can start collaborating on projects.</p>
-            <a href="{{ config('app.url') }}/teams/{{ $invitation->team->id }}" class="button">View Team</a>
+            <p><strong>{{ $user->name }}</strong> has accepted your invitation to join {{ $invitation->team ? 'the team' : 'the workspace' }} <strong>{{ $invitation->team ? $invitation->team->name : ($invitation->space ? $invitation->space->name : 'the workspace') }}</strong>.</p>
+            <p>They now have access and can start collaborating on projects.</p>
+            @if($invitation->team)
+                <a href="{{ config('app.url') }}/teams/{{ $invitation->team->id }}" class="button">View Team</a>
+            @elseif($invitation->space)
+                <a href="{{ config('app.url') }}/spaces/{{ $invitation->space->id }}" class="button">View Space</a>
+            @endif
         </div>
         <div class="footer">
             <p>&copy; {{ date('Y') }} {{ config('app.name') }}. All rights reserved.</p>
