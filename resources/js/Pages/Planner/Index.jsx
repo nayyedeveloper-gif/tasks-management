@@ -56,10 +56,11 @@ function fmtMonthRange(start, end) {
     return `${s.toLocaleDateString(undefined, { month: 'short' })} – ${e.toLocaleDateString(undefined, { month: 'short', year: 'numeric' })}`;
 }
 function toIsoLocal(d) {
-    // Returns "YYYY-MM-DDTHH:MM:SS" in local time (no Z) — Laravel parses this as local time.
+    // Returns "YYYY-MM-DDTHH:MM" for datetime-local input (browser local time)
     const pad = (n) => String(n).padStart(2, '0');
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
+
 function snapMinutes(min) {
     return Math.round(min / SNAP_MIN) * SNAP_MIN;
 }
@@ -124,8 +125,8 @@ function BlockEditor({ block, onClose, onChanged }) {
             title: title.trim(),
             description: description.trim() || null,
             color,
-            starts_at: toIsoLocal(new Date(startsAt)),
-            ends_at: toIsoLocal(new Date(endsAt)),
+            starts_at: new Date(startsAt).toISOString(),
+            ends_at: new Date(endsAt).toISOString(),
         };
         const url = isNew ? route('planner.blocks.store') : route('planner.blocks.update', block.id);
         const method = isNew ? 'post' : 'put';
@@ -478,8 +479,8 @@ export default function PlannerIndex({ view, anchor, rangeStart, rangeEnd, block
             task_id: task.id,
             title: task.title,
             color: PRIORITY_COLOR[task.priority] || '#7c3aed',
-            starts_at: toIsoLocal(starts),
-            ends_at: toIsoLocal(ends),
+            starts_at: starts.toISOString(),
+            ends_at: ends.toISOString(),
         }, { preserveScroll: true, onSuccess: refresh });
     };
 
@@ -490,8 +491,8 @@ export default function PlannerIndex({ view, anchor, rangeStart, rangeEnd, block
             task_id: block.task_id || null,
             title: block.title,
             color: block.color,
-            starts_at: toIsoLocal(starts),
-            ends_at: toIsoLocal(ends),
+            starts_at: starts.toISOString(),
+            ends_at: ends.toISOString(),
         }, { preserveScroll: true, onSuccess: refresh });
     };
 

@@ -38,8 +38,12 @@ class PlannerController extends Controller
             ->get();
 
         // Tasks scheduled by due_date inside the range, but not in a block — show as ghost rows
-        $scheduledTasks = Task::with(['list:id,name,space_id', 'list.space:id,name'])
-            ->where('assigned_to', $user->id)
+        $scheduledTasks = Task::visibleTo($user)
+            ->with(['list:id,name,space_id', 'list.space:id,name'])
+            ->where(function ($q) use ($user) {
+                $q->where('assigned_to', $user->id)
+                  ->orWhere('created_by', $user->id);
+            })
             ->whereNull('date_done')
             ->whereNotNull('due_date')
             ->whereBetween('due_date', [$rangeStart->toDateString(), $rangeEnd->copy()->subDay()->toDateString()])
@@ -47,8 +51,12 @@ class PlannerController extends Controller
             ->get();
 
         // Unscheduled (no due_date, not done) — sidebar
-        $unscheduled = Task::with(['list:id,name,space_id', 'list.space:id,name'])
-            ->where('assigned_to', $user->id)
+        $unscheduled = Task::visibleTo($user)
+            ->with(['list:id,name,space_id', 'list.space:id,name'])
+            ->where(function ($q) use ($user) {
+                $q->where('assigned_to', $user->id)
+                  ->orWhere('created_by', $user->id);
+            })
             ->whereNull('date_done')
             ->whereNull('due_date')
             ->orderByDesc('updated_at')
