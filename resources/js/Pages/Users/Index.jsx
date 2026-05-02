@@ -3,12 +3,13 @@ import { useState } from 'react';
 import Sidebar from '@/Components/Sidebar';
 import { Search, Shield, UserCheck, UserX, ChevronDown, Check, ChevronUp, Users, Key, Settings, Trash2 } from 'lucide-react';
 
-export default function UsersIndex({ users, roles, permissions, auth }) {
+export default function UsersIndex({ users, roles, permissions, allSpaces, auth }) {
     const { flash } = usePage().props;
     const [activeTab, setActiveTab] = useState('users');
     const [searchQuery, setSearchQuery] = useState('');
     const [filterRole, setFilterRole] = useState('all');
     const [showRoleMenu, setShowRoleMenu] = useState(null);
+    const [showSpaceMenu, setShowSpaceMenu] = useState(null);
     const [expandedModules, setExpandedModules] = useState({});
 
     // Role Permission Form
@@ -37,6 +38,25 @@ export default function UsersIndex({ users, roles, permissions, auth }) {
             { preserveScroll: true }
         );
         setShowRoleMenu(null);
+    };
+
+    const updateSpaces = (userId, spaceIds) => {
+        router.put(
+            route('users.update-spaces', userId),
+            { space_ids: spaceIds },
+            { preserveScroll: true }
+        );
+    };
+
+    const toggleSpace = (user, spaceId) => {
+        const currentIds = user.spaces.map(s => s.id);
+        let newIds;
+        if (currentIds.includes(spaceId)) {
+            newIds = currentIds.filter(id => id !== spaceId);
+        } else {
+            newIds = [...currentIds, spaceId];
+        }
+        updateSpaces(user.id, newIds);
     };
 
     const toggleActive = (userId) => {
@@ -164,8 +184,8 @@ export default function UsersIndex({ users, roles, permissions, auth }) {
                                         ) : (
                                             filteredUsers.map((user) => (
                                                 <div key={user.id} className="grid grid-cols-12 gap-4 px-4 py-3 items-center hover:bg-neutral-800/30 transition-colors">
-                                                    <div className="col-span-5 flex items-center gap-3">
-                                                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-sm font-bold text-white shadow-lg shadow-purple-500/10">
+                                                    <div className="col-span-3 flex items-center gap-3">
+                                                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-sm font-bold text-white shadow-lg shadow-purple-500/10 shrink-0">
                                                             {user.name.charAt(0).toUpperCase()}
                                                         </div>
                                                         <div className="min-w-0">
@@ -174,14 +194,17 @@ export default function UsersIndex({ users, roles, permissions, auth }) {
                                                         </div>
                                                     </div>
 
-                                                    <div className="col-span-3">
+                                                    <div className="col-span-2">
                                                         <div className="relative">
                                                             <button
-                                                                onClick={() => setShowRoleMenu(showRoleMenu === user.id ? null : user.id)}
-                                                                className="flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-medium bg-neutral-950 border border-neutral-800 text-neutral-300 hover:border-neutral-600 transition w-fit"
+                                                                onClick={() => {
+                                                                    setShowRoleMenu(showRoleMenu === user.id ? null : user.id);
+                                                                    setShowSpaceMenu(null);
+                                                                }}
+                                                                className="flex items-center gap-2 px-3 py-1.5 rounded-md text-[11px] font-medium bg-neutral-950 border border-neutral-800 text-neutral-300 hover:border-neutral-600 transition w-fit"
                                                             >
                                                                 {user.role_id === 1 ? 'Admin' : 'Member'}
-                                                                <ChevronDown size={12} className="text-neutral-500" />
+                                                                <ChevronDown size={10} className="text-neutral-500" />
                                                             </button>
                                                             {showRoleMenu === user.id && (
                                                                 <div className="absolute z-10 mt-1 w-32 bg-neutral-900 border border-neutral-700 rounded-lg shadow-2xl overflow-hidden">
@@ -189,7 +212,7 @@ export default function UsersIndex({ users, roles, permissions, auth }) {
                                                                         <button
                                                                             key={r.id}
                                                                             onClick={() => updateRole(user.id, r.id)}
-                                                                            className={`w-full px-3 py-2 text-xs text-left hover:bg-neutral-800 transition ${
+                                                                            className={`w-full px-3 py-2 text-[11px] text-left hover:bg-neutral-800 transition ${
                                                                                 user.role_id === r.id ? 'text-purple-400 font-medium' : 'text-neutral-300'
                                                                             }`}
                                                                         >
@@ -201,9 +224,64 @@ export default function UsersIndex({ users, roles, permissions, auth }) {
                                                         </div>
                                                     </div>
 
-                                                    <div className="col-span-2 text-xs">
+                                                    <div className="col-span-3">
+                                                        <div className="relative">
+                                                            <div className="flex flex-wrap gap-1 mb-1">
+                                                                {user.spaces && user.spaces.length > 0 ? (
+                                                                    user.spaces.map(s => (
+                                                                        <span key={s.id} className="inline-flex items-center px-1.5 py-0.5 rounded bg-purple-500/10 border border-purple-500/20 text-[10px] text-purple-300">
+                                                                            {s.name}
+                                                                            <button 
+                                                                                onClick={() => toggleSpace(user, s.id)}
+                                                                                className="ml-1 hover:text-white"
+                                                                            >
+                                                                                ×
+                                                                            </button>
+                                                                        </span>
+                                                                    ))
+                                                                ) : (
+                                                                    <span className="text-[10px] text-neutral-600 italic">No spaces assigned</span>
+                                                                )}
+                                                            </div>
+                                                            <button
+                                                                onClick={() => {
+                                                                    setShowSpaceMenu(showSpaceMenu === user.id ? null : user.id);
+                                                                    setShowRoleMenu(null);
+                                                                }}
+                                                                className="flex items-center gap-1.5 text-[10px] font-medium text-neutral-500 hover:text-purple-400 transition"
+                                                            >
+                                                                Manage Spaces
+                                                                <ChevronDown size={10} />
+                                                            </button>
+                                                            {showSpaceMenu === user.id && (
+                                                                <div className="absolute z-10 mt-1 w-48 bg-neutral-900 border border-neutral-700 rounded-lg shadow-2xl overflow-hidden py-1 max-h-48 overflow-y-auto">
+                                                                    {allSpaces.length === 0 ? (
+                                                                        <div className="px-3 py-2 text-[11px] text-neutral-500">No spaces found</div>
+                                                                    ) : (
+                                                                        allSpaces.map((space) => {
+                                                                            const isAssigned = user.spaces.some(s => s.id === space.id);
+                                                                            return (
+                                                                                <button
+                                                                                    key={space.id}
+                                                                                    onClick={() => toggleSpace(user, space.id)}
+                                                                                    className="w-full px-3 py-1.5 flex items-center justify-between hover:bg-neutral-800 transition"
+                                                                                >
+                                                                                    <span className={`text-[11px] ${isAssigned ? 'text-purple-400' : 'text-neutral-300'}`}>
+                                                                                        {space.name}
+                                                                                    </span>
+                                                                                    {isAssigned && <Check size={10} className="text-purple-400" />}
+                                                                                </button>
+                                                                            );
+                                                                        })
+                                                                    )}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="col-span-2 text-[10px]">
                                                         <div className="flex items-center gap-2">
-                                                            <div className={`w-2 h-2 rounded-full ${user.email_verified_at ? 'bg-emerald-500 shadow-sm shadow-emerald-500/50' : 'bg-yellow-500 shadow-sm shadow-yellow-500/50'}`} />
+                                                            <div className={`w-1.5 h-1.5 rounded-full ${user.email_verified_at ? 'bg-emerald-500' : 'bg-yellow-500'}`} />
                                                             <span className={user.email_verified_at ? 'text-emerald-400' : 'text-yellow-400'}>
                                                                 {user.email_verified_at ? 'Active' : 'Pending'}
                                                             </span>

@@ -14,19 +14,33 @@ class UsersController extends Controller
 {
     public function index(Request $request): Response
     {
-        $users = User::with('roleModel')
+        $users = User::with(['roleModel', 'spaces:id,name'])
             ->select('id', 'name', 'email', 'role', 'role_id', 'email_verified_at')
             ->orderBy('name')
             ->get();
 
         $roles = Role::with('permissions')->get();
         $permissions = Permission::orderBy('module')->orderBy('name')->get();
+        $allSpaces = \App\Models\Space::whereNull('parent_id')->orderBy('name')->get(['id', 'name']);
 
         return Inertia::render('Users/Index', [
             'users' => $users,
             'roles' => $roles,
             'permissions' => $permissions,
+            'allSpaces' => $allSpaces,
         ]);
+    }
+
+    public function updateSpaces(Request $request, User $user): RedirectResponse
+    {
+        $validated = $request->validate([
+            'space_ids' => 'array',
+            'space_ids.*' => 'exists:spaces,id',
+        ]);
+
+        $user->spaces()->sync($validated['space_ids'] ?? []);
+
+        return back()->with('success', 'User spaces updated successfully.');
     }
 
     public function updateRole(Request $request, User $user): RedirectResponse
