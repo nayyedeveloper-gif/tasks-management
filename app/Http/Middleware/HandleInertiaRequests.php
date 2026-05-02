@@ -135,7 +135,7 @@ class HandleInertiaRequests extends Middleware
                 'lists' => fn ($q) => $q->select('id', 'space_id', 'folder_id', 'name', 'color', 'position'),
             ])
             ->orderBy('created_at', 'desc')
-            ->get(['id', 'name', 'parent_id']);
+            ->get(['id', 'name', 'parent_id', 'color', 'icon']);
 
         $channels = Channel::where(function ($query) use ($userId) {
             $query->where('is_private', false)
