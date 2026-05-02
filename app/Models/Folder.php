@@ -31,4 +31,9 @@ class Folder extends Model
     {
         return $this->hasMany(TaskList::class)->orderBy('position');
     }
+
+    public function tasks(): \Illuminate\Database\Eloquent\Relations\HasManyThrough
+    {
+        return $this->hasManyThrough(Task::class, TaskList::class, 'folder_id', 'task_list_id');
+    }
 }
