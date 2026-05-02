@@ -135,6 +135,7 @@ function ListNode({ list, level, currentUrl }) {
             href={route('lists.show', list.id)}
             active={active}
             indent={level}
+            badge={list.active_tasks_count}
         />
     );
 }
@@ -155,6 +156,11 @@ function FolderNode({ folder, level, currentUrl, expanded, onToggle }) {
                 )}
                 <FolderIcon size={14} className="text-neutral-400 shrink-0" />
                 <span className="flex-1 truncate">{folder.name}</span>
+                {folder.active_tasks_count > 0 && (
+                    <span className="text-[10px] text-neutral-500 font-bold px-1.5 py-0.5 rounded-full bg-neutral-800/50">
+                        {folder.active_tasks_count}
+                    </span>
+                )}
             </button>
             {isOpen &&
                 (folder.lists || []).map((list) => (
