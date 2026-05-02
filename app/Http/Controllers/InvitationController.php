@@ -93,6 +93,14 @@ class InvitationController extends Controller
             }
         }
 
+        // Add user to space if space_id exists
+        if ($invitation->space_id) {
+            $space = \App\Models\Space::find($invitation->space_id);
+            if ($space) {
+                $space->users()->syncWithoutDetaching([$user->id => ['role' => 'member']]);
+            }
+        }
+
         // Send confirmation email to inviter
         $inviter = User::find($invitation->invited_by);
         if ($inviter) {

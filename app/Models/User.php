@@ -39,6 +39,13 @@ class User extends Authenticatable
             ->withTimestamps();
     }
 
+    public function spaces(): BelongsToMany
+    {
+        return $this->belongsToMany(Space::class, 'space_user')
+            ->withPivot('role')
+            ->withTimestamps();
+    }
+
     public function assignedTasks(): HasMany
     {
         return $this->hasMany(Task::class, 'assigned_to');

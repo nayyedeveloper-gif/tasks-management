@@ -453,6 +453,29 @@ export default function SpaceDetail({ space }) {
                                         }
                                     />
                                 </Card>
+
+                                <Card title="Members">
+                                    {(space.users || []).length === 0 ? (
+                                        <EmptyCardState
+                                            icon={UserIcon}
+                                            title="No specific members added to this space yet."
+                                        />
+                                    ) : (
+                                        <div className="space-y-3">
+                                            {space.users.map((u) => (
+                                                <div key={u.id} className="flex items-center gap-3">
+                                                    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-[10px] font-bold text-white uppercase">
+                                                        {u.name.charAt(0)}
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="text-xs font-medium text-neutral-200 truncate">{u.name}</div>
+                                                        <div className="text-[10px] text-neutral-500 truncate">{u.email}</div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </Card>
                             </div>
 
                             {/* Folders card */}

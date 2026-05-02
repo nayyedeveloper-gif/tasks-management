@@ -45,6 +45,7 @@ class SpaceController extends Controller
         $space = Space::with([
             'createdBy',
             'children',
+            'users:id,name,email,avatar_color',
             'folders.lists.tasks:id,task_list_id,status,priority,start_date,due_date,assigned_to',
             'folders.lists.createdBy:id,name',
             'lists.tasks:id,task_list_id,status,priority,start_date,due_date,assigned_to',

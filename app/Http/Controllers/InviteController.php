@@ -124,6 +124,14 @@ class InviteController extends Controller
                     $team->members()->syncWithoutDetaching([$user->id => ['role' => 'member']]);
                 }
             }
+
+            // Add user to space if space_id exists
+            if ($invitation->space_id) {
+                $space = \App\Models\Space::find($invitation->space_id);
+                if ($space) {
+                    $space->users()->syncWithoutDetaching([$user->id => ['role' => 'member']]);
+                }
+            }
         }
 
         // Send confirmation email to inviter (always send, even if user doesn't exist yet)

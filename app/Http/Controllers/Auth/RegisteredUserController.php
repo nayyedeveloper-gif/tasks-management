@@ -92,8 +92,12 @@ class RegisteredUserController extends Controller
                     }
                 }
 
-                // Redirect to the invited space or dashboard
+                // Add user to space if space_id exists
                 if ($invitation->space_id) {
+                    $space = \App\Models\Space::find($invitation->space_id);
+                    if ($space) {
+                        $space->users()->syncWithoutDetaching([$user->id => ['role' => 'member']]);
+                    }
                     return redirect()->route('spaces.show', $invitation->space_id)->with('success', 'Registration successful! You have been added to the workspace.');
                 }
             }

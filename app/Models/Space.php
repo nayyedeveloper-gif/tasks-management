@@ -44,6 +44,13 @@ class Space extends Model
             ->orderBy('position');
     }
 
+    public function users(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'space_user')
+            ->withPivot('role')
+            ->withTimestamps();
+    }
+
     public function invitations(): HasMany
     {
         return $this->hasMany(Invitation::class);
