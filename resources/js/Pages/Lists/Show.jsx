@@ -326,6 +326,10 @@ export default function ListShow({ list, movableSpaces = [] }) {
         router.put(route('tasks.update', taskId), { due_date }, { preserveScroll: true });
     };
 
+    const updateStartDate = (taskId, start_date) => {
+        router.put(route('tasks.update', taskId), { start_date }, { preserveScroll: true });
+    };
+
     const deleteTask = (taskId) => {
         if (confirm('Delete this task?')) {
             router.delete(route('tasks.destroy', taskId), { preserveScroll: true });
@@ -339,8 +343,8 @@ export default function ListShow({ list, movableSpaces = [] }) {
 
     /* ---------- LIST VIEW ---------- */
     const renderListView = () => (
-        <div className="bg-neutral-900 border border-neutral-800 rounded-lg overflow-hidden">
-            <div className="grid grid-cols-[3fr_1.5fr_1.2fr_1.2fr_1.2fr_1.2fr_1.5fr_32px] gap-2 px-4 py-2 bg-neutral-900 border-b border-neutral-800 text-[11px] uppercase tracking-wider text-neutral-500 items-center">
+        <div className="bg-neutral-900 border border-neutral-800 rounded-lg">
+            <div className="grid grid-cols-[3fr_1.5fr_1.5fr_1.5fr_1.5fr_1.2fr_1.5fr_32px] gap-2 px-4 py-2 bg-neutral-900 border-b border-neutral-800 text-[11px] uppercase tracking-wider text-neutral-500 items-center">
                 <div className="">Name</div>
                 <div className="">Assignee</div>
                 <div className="">Start date</div>
@@ -359,7 +363,7 @@ export default function ListShow({ list, movableSpaces = [] }) {
                 const st = findStatus(task.status);
                 return (
                     <div key={task.id}>
-                        <div className="grid grid-cols-[3fr_1.5fr_1.2fr_1.2fr_1.2fr_1.2fr_1.5fr_32px] gap-2 px-4 py-2.5 border-b border-neutral-800/60 hover:bg-neutral-800/40 group items-center">
+                        <div className="grid grid-cols-[3fr_1.5fr_1.5fr_1.5fr_1.5fr_1.2fr_1.5fr_32px] gap-2 px-4 py-2.5 border-b border-neutral-800/60 hover:bg-neutral-800/40 group items-center relative">
                             <div className="flex items-center gap-2 overflow-hidden">
                                 <button
                                     onClick={() => toggleSubtasks(task.id)}
@@ -392,23 +396,29 @@ export default function ListShow({ list, movableSpaces = [] }) {
                                     </span>
                                 )}
                             </div>
-                            <div className="">
+                            <div className="relative">
                                 <AssigneePicker
                                     assigned={task.assigned_to}
                                     onChange={(uid) => updateAssignee(task.id, uid)}
                                 />
                             </div>
                             <div className="text-xs text-neutral-400">
-                                {task.start_date ? formatDate(task.start_date) : '—'}
+                                <input
+                                    type="date"
+                                    value={task.start_date || ''}
+                                    onChange={(e) => updateStartDate(task.id, e.target.value)}
+                                    className="bg-transparent border-none p-0 text-[11px] text-neutral-400 focus:ring-0 w-24 cursor-pointer hover:text-neutral-200"
+                                />
                             </div>
                             <div className="text-xs text-neutral-400">
-                                {task.due_date ? (
-                                    <span className={isOverdue(task.due_date) ? 'text-red-400' : ''}>
-                                        {formatDate(task.due_date)}
-                                    </span>
-                                ) : '—'}
+                                <input
+                                    type="date"
+                                    value={task.due_date || ''}
+                                    onChange={(e) => updateDueDate(task.id, e.target.value)}
+                                    className={`bg-transparent border-none p-0 text-[11px] focus:ring-0 w-24 cursor-pointer hover:text-neutral-200 ${isOverdue(task.due_date) ? 'text-red-400' : 'text-neutral-400'}`}
+                                />
                             </div>
-                            <div className="text-xs text-neutral-400">
+                            <div className="text-xs text-neutral-500 italic">
                                 {task.date_done ? formatDate(task.date_done) : '—'}
                             </div>
                             <div className="">
@@ -419,11 +429,11 @@ export default function ListShow({ list, movableSpaces = [] }) {
                                     {task.priority || 'medium'}
                                 </span>
                             </div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 relative">
                                 <select
                                     value={task.status}
                                     onChange={(e) => updateStatus(task.id, e.target.value)}
-                                    className="text-[10px] rounded px-2 py-0.5 border-none w-full max-w-[120px]"
+                                    className="text-[10px] rounded px-2 py-0.5 border-none w-full max-w-[120px] cursor-pointer"
                                     style={statusStyle(st?.color || '#6b7280')}
                                 >
                                     {statuses.map((s) => (
@@ -448,7 +458,7 @@ export default function ListShow({ list, movableSpaces = [] }) {
                                 return (
                                     <div
                                         key={sub.id}
-                                        className="grid grid-cols-[3fr_1.5fr_1.2fr_1.2fr_1.2fr_1.2fr_1.5fr_32px] gap-2 px-4 py-2 pl-12 border-b border-neutral-800/60 hover:bg-neutral-800/30 items-center"
+                                        className="grid grid-cols-[3fr_1.5fr_1.5fr_1.5fr_1.5fr_1.2fr_1.5fr_32px] gap-2 px-4 py-2 pl-12 border-b border-neutral-800/60 hover:bg-neutral-800/30 items-center relative"
                                     >
                                         <div className="flex items-center gap-2 overflow-hidden text-neutral-300">
                                             <span
@@ -470,16 +480,22 @@ export default function ListShow({ list, movableSpaces = [] }) {
                                             />
                                         </div>
                                         <div className="text-xs text-neutral-500">
-                                            {sub.start_date ? formatDate(sub.start_date) : '—'}
+                                            <input
+                                                type="date"
+                                                value={sub.start_date || ''}
+                                                onChange={(e) => updateStartDate(sub.id, e.target.value)}
+                                                className="bg-transparent border-none p-0 text-[11px] text-neutral-500 focus:ring-0 w-24 cursor-pointer hover:text-neutral-300"
+                                            />
                                         </div>
                                         <div className="text-xs text-neutral-500">
-                                            {sub.due_date ? (
-                                                <span className={isOverdue(sub.due_date) ? 'text-red-400' : ''}>
-                                                    {formatDate(sub.due_date)}
-                                                </span>
-                                            ) : '—'}
+                                            <input
+                                                type="date"
+                                                value={sub.due_date || ''}
+                                                onChange={(e) => updateDueDate(sub.id, e.target.value)}
+                                                className={`bg-transparent border-none p-0 text-[11px] focus:ring-0 w-24 cursor-pointer hover:text-neutral-300 ${isOverdue(sub.due_date) ? 'text-red-400' : 'text-neutral-500'}`}
+                                            />
                                         </div>
-                                        <div className="text-xs text-neutral-500">
+                                        <div className="text-xs text-neutral-500 italic">
                                             {sub.date_done ? formatDate(sub.date_done) : '—'}
                                         </div>
                                         <div className="">
@@ -494,7 +510,7 @@ export default function ListShow({ list, movableSpaces = [] }) {
                                             <select
                                                 value={sub.status}
                                                 onChange={(e) => updateStatus(sub.id, e.target.value)}
-                                                className="text-[10px] rounded px-2 py-0.5 border-none w-full max-w-[120px]"
+                                                className="text-[10px] rounded px-2 py-0.5 border-none w-full max-w-[120px] cursor-pointer"
                                                 style={statusStyle(subSt?.color || '#6b7280')}
                                             >
                                                 {statuses.map((s) => (

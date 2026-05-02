@@ -111,6 +111,20 @@ class TaskController extends Controller
         ]);
 
         $task = Task::findOrFail($id);
+
+        // Handle auto Date Done based on status type
+        if (isset($validated['status']) && $validated['status'] !== $task->status) {
+            $status = \App\Models\TaskStatus::where('task_list_id', $task->task_list_id)
+                ->where('key', $validated['status'])
+                ->first();
+            
+            if ($status && $status->type === 'closed') {
+                $validated['date_done'] = now()->toDateString();
+            } else if ($status) {
+                $validated['date_done'] = null;
+            }
+        }
+
         $task->update($validated);
 
         return redirect()->back()->with('success', 'Task updated successfully.');

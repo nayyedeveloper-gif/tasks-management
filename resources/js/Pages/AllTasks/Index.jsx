@@ -127,6 +127,14 @@ export default function AllTasksIndex({ tasks, groupedByStatus, statuses, spaces
         router.put(route('tasks.update', taskId), { status }, { preserveScroll: true });
     };
 
+    const updateTaskDueDate = (taskId, due_date) => {
+        router.put(route('tasks.update', taskId), { due_date }, { preserveScroll: true });
+    };
+
+    const updateTaskStartDate = (taskId, start_date) => {
+        router.put(route('tasks.update', taskId), { start_date }, { preserveScroll: true });
+    };
+
     const updateTaskAssignee = (taskId, assignedTo) => {
         router.put(route('tasks.update', taskId), { assigned_to: assignedTo }, { preserveScroll: true });
     };
@@ -269,7 +277,7 @@ export default function AllTasksIndex({ tasks, groupedByStatus, statuses, spaces
                     ) : view === 'list' ? (
                     <>
                     {/* Column Headers */}
-                    <div className="grid grid-cols-[3fr_1.5fr_1.2fr_1.2fr_1.2fr_1.2fr_1.5fr_32px] gap-2 px-4 py-2 border-b border-neutral-800 bg-neutral-900/50 text-[11px] uppercase tracking-wider text-neutral-500 sticky top-0 z-10 items-center">
+                    <div className="grid grid-cols-[3fr_1.5fr_1.5fr_1.5fr_1.5fr_1.2fr_1.5fr_32px] gap-2 px-4 py-2 border-b border-neutral-800 bg-neutral-900/50 text-[11px] uppercase tracking-wider text-neutral-500 sticky top-0 z-10 items-center">
                         <div className="">Name</div>
                         <div className="">Assignee</div>
                         <div className="">Start date</div>
@@ -313,6 +321,8 @@ export default function AllTasksIndex({ tasks, groupedByStatus, statuses, spaces
                                                 onClick={() => router.push(route('tasks.show', task.id))}
                                                 onStatusChange={(status) => updateTaskStatus(task.id, status)}
                                                 onAssigneeChange={(uid) => updateTaskAssignee(task.id, uid)}
+                                                onDueDateChange={(date) => updateTaskDueDate(task.id, date)}
+                                                onStartDateChange={(date) => updateTaskStartDate(task.id, date)}
                                                 onDelete={() => deleteTask(task.id)}
                                             />
                                         ))}
@@ -357,12 +367,12 @@ export default function AllTasksIndex({ tasks, groupedByStatus, statuses, spaces
     );
 }
 
-function TaskRow({ task, statuses, onClick, onStatusChange, onAssigneeChange, onDelete }) {
+function TaskRow({ task, statuses, onClick, onStatusChange, onAssigneeChange, onDueDateChange, onStartDateChange, onDelete }) {
     const st = statuses.find(s => s.key === task.status) || { key: task.status, label: task.status, color: '#6b7280' };
     const hasSubtasks = (task.subtasks_count || 0) > 0;
 
     return (
-        <div className="grid grid-cols-[3fr_1.5fr_1.2fr_1.2fr_1.2fr_1.2fr_1.5fr_32px] gap-2 px-4 py-2.5 border-b border-neutral-800/60 hover:bg-neutral-800/40 group items-center">
+        <div className="grid grid-cols-[3fr_1.5fr_1.5fr_1.5fr_1.5fr_1.2fr_1.5fr_32px] gap-2 px-4 py-2.5 border-b border-neutral-800/60 hover:bg-neutral-800/40 group items-center relative">
             <div className="flex items-center gap-2 overflow-hidden">
                 <span className="inline-block w-4 shrink-0" />
                 <div 
@@ -386,23 +396,29 @@ function TaskRow({ task, statuses, onClick, onStatusChange, onAssigneeChange, on
                     </span>
                 )}
             </div>
-            <div className="">
+            <div className="relative">
                 <AssigneePicker
                     assigned={task.assigned_to}
                     onChange={onAssigneeChange}
                 />
             </div>
             <div className="text-xs text-neutral-400">
-                {task.start_date ? formatDate(task.start_date) : '—'}
+                <input
+                    type="date"
+                    value={task.start_date || ''}
+                    onChange={(e) => onStartDateChange(e.target.value)}
+                    className="bg-transparent border-none p-0 text-[11px] text-neutral-400 focus:ring-0 w-24 cursor-pointer hover:text-neutral-200"
+                />
             </div>
             <div className="text-xs text-neutral-400">
-                {task.due_date ? (
-                    <span className={isOverdue(task.due_date) ? 'text-red-400' : ''}>
-                        {formatDate(task.due_date)}
-                    </span>
-                ) : '—'}
+                <input
+                    type="date"
+                    value={task.due_date || ''}
+                    onChange={(e) => onDueDateChange(e.target.value)}
+                    className={`bg-transparent border-none p-0 text-[11px] focus:ring-0 w-24 cursor-pointer hover:text-neutral-200 ${isOverdue(task.due_date) ? 'text-red-400' : 'text-neutral-400'}`}
+                />
             </div>
-            <div className="text-xs text-neutral-400">
+            <div className="text-xs text-neutral-500 italic">
                 {task.date_done ? formatDate(task.date_done) : '—'}
             </div>
             <div className="">
@@ -411,11 +427,11 @@ function TaskRow({ task, statuses, onClick, onStatusChange, onAssigneeChange, on
                     <span className="capitalize">{task.priority || 'medium'}</span>
                 </span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 relative">
                 <select
                     value={task.status}
                     onChange={(e) => onStatusChange(e.target.value)}
-                    className="text-[10px] rounded px-2 py-0.5 border-none w-full max-w-[120px]"
+                    className="text-[10px] rounded px-2 py-0.5 border-none w-full max-w-[120px] cursor-pointer"
                     style={statusStyle(st.color || '#6b7280')}
                     onClick={(e) => e.stopPropagation()}
                 >
