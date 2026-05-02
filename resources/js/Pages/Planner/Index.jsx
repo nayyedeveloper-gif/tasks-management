@@ -324,8 +324,9 @@ function DayColumn({ day, isToday, blocks, onCreate, onSelectBlock, onDropTask, 
                 {/* Blocks */}
                 {blocks.map((b) => (
                     <BlockCard
-                        key={b.id}
+                        key={`${b.id}-${day.getTime()}`}
                         block={b}
+                        day={day}
                         onClick={() => onSelectBlock(b)}
                         onResize={onResizeBlock}
                     />
@@ -354,40 +355,56 @@ function NowLine() {
     );
 }
 
-function BlockCard({ block, onClick, onResize }) {
-    const start = new Date(block.starts_at);
-    const end = new Date(block.ends_at);
-    const startMin = minutesFromMidnight(start) - DAY_START_HOUR * 60;
-    const durMin = Math.max(15, (end - start) / 60_000);
+function BlockCard({ block, day, onClick, onResize }) {
+    const bStart = new Date(block.starts_at);
+    const bEnd = new Date(block.ends_at);
+    
+    const dayStart = startOfDay(day);
+    const dayEnd = addDays(dayStart, 1);
+    
+    // Effective start/end for THIS day column (clipping)
+    const renderStart = new Date(Math.max(bStart.getTime(), dayStart.getTime()));
+    const renderEnd = new Date(Math.min(bEnd.getTime(), dayEnd.getTime()));
+    
+    const startMin = minutesFromMidnight(renderStart) - DAY_START_HOUR * 60;
+    const durMin = (renderEnd - renderStart) / 60_000;
+    
     const top = (startMin / 60) * HOUR_HEIGHT;
-    const height = (durMin / 60) * HOUR_HEIGHT;
+    const height = Math.max(20, (durMin / 60) * HOUR_HEIGHT);
 
     const onDragStart = (e) => {
         e.dataTransfer.effectAllowed = 'move';
         e.dataTransfer.setData('application/x-block', JSON.stringify({
-            id: block.id, durationMin: durMin,
+            id: block.id, durationMin: (bEnd - bStart) / 60_000,
         }));
     };
 
     const onResizeStart = (e) => {
         e.preventDefault(); e.stopPropagation();
+        // Resize only allowed on the day the block ends
+        if (!isSameDay(bEnd, day)) return;
+
         const startY = e.clientY;
         const startHeight = height;
         const move = (ev) => {
             const delta = ev.clientY - startY;
             const newHeight = Math.max(HOUR_HEIGHT * (SNAP_MIN / 60), startHeight + delta);
             const newDurMin = snapMinutes((newHeight / HOUR_HEIGHT) * 60);
-            const newEnd = new Date(start.getTime() + newDurMin * 60_000);
-            onResize(block.id, start, newEnd, /* commit */ false);
-            // Live preview via direct DOM mutation for smoothness:
-            ev.target.parentElement && (ev.target.parentElement.style.height = `${(newDurMin / 60) * HOUR_HEIGHT}px`);
+            const totalDurMin = ((bEnd - bStart) / 60_000) - (durMin) + newDurMin;
+            const newEnd = new Date(bStart.getTime() + totalDurMin * 60_000);
+            onResize(block.id, bStart, newEnd, /* commit */ false);
+            // Live preview
+            if (ev.target.parentElement) {
+                ev.target.parentElement.style.height = `${(newDurMin / 60) * HOUR_HEIGHT}px`;
+            }
         };
         const up = (ev) => {
             const delta = ev.clientY - startY;
             const newHeight = Math.max(HOUR_HEIGHT * (SNAP_MIN / 60), startHeight + delta);
             const newDurMin = snapMinutes((newHeight / HOUR_HEIGHT) * 60);
-            const newEnd = new Date(start.getTime() + newDurMin * 60_000);
-            onResize(block.id, start, newEnd, /* commit */ true);
+            const totalDurMin = ((bEnd - bStart) / 60_000) - (durMin) + newDurMin;
+            const newEnd = new Date(bStart.getTime() + totalDurMin * 60_000);
+            onResize(block.id, bStart, newEnd, /* commit */ true);
             window.removeEventListener('pointermove', move);
             window.removeEventListener('pointerup', up);
         };
@@ -401,7 +418,7 @@ function BlockCard({ block, onClick, onResize }) {
             draggable
             onDragStart={onDragStart}
             onClick={onClick}
-            className="absolute left-1 right-1 rounded-md border-l-[3px] cursor-pointer overflow-hidden group hover:shadow-lg transition"
+            className="absolute left-1 right-1 rounded-md border-l-[3px] cursor-pointer overflow-hidden group hover:shadow-lg transition-shadow"
             style={{
                 top, height,
                 background: `${tone}26`,
@@ -409,24 +426,24 @@ function BlockCard({ block, onClick, onResize }) {
                 borderTop: `1px solid ${tone}44`,
                 borderRight: `1px solid ${tone}44`,
                 borderBottom: `1px solid ${tone}44`,
+                zIndex: 10,
             }}
         >
-            <div className="px-2 py-1.5 text-[11px] leading-tight">
+            <div className="px-2 py-1 text-[10px] leading-tight h-full">
                 <div className="font-semibold text-white truncate">{block.title}</div>
-                {height > 36 && (
-                    <div className="text-neutral-300/80 text-[10px] mt-0.5">
-                        {fmtTime(start)} – {fmtTime(end)}
+                {height > 32 && (
+                    <div className="text-neutral-400 text-[9px] mt-0.5 truncate">
+                        {fmtTime(bStart)} – {fmtTime(bEnd)}
                     </div>
                 )}
-                {block.task && height > 56 && (
-                    <div className="text-[10px] text-neutral-300/70 mt-0.5 truncate">↳ {block.task.title}</div>
-                )}
             </div>
-            {/* Resize handle */}
-            <div
-                onPointerDown={onResizeStart}
-                className="absolute bottom-0 left-0 right-0 h-1.5 cursor-ns-resize bg-transparent group-hover:bg-white/10"
-            />
+            {/* Resize handle (only on the last day of the block) */}
+            {isSameDay(bEnd, day) && (
+                <div
+                    onPointerDown={onResizeStart}
+                    className="absolute bottom-0 left-0 right-0 h-1.5 cursor-ns-resize bg-transparent group-hover:bg-white/10"
+                />
+            )}
         </div>
     );
 }
@@ -446,8 +463,18 @@ export default function PlannerIndex({ view, anchor, rangeStart, rangeEnd, block
     const blocksByDay = useMemo(() => {
         const map = new Map(days.map((d) => [startOfDay(d).getTime(), []]));
         blocks.forEach((b) => {
-            const k = startOfDay(b.starts_at).getTime();
-            if (map.has(k)) map.get(k).push(b);
+            const bStart = new Date(b.starts_at);
+            const bEnd = new Date(b.ends_at);
+            
+            days.forEach(day => {
+                const dayStart = startOfDay(day);
+                const dayEnd = addDays(dayStart, 1);
+                
+                // If block overlaps this specific day
+                if (bStart < dayEnd && bEnd > dayStart) {
+                    map.get(dayStart.getTime()).push(b);
+                }
+            });
         });
         return map;
     }, [blocks, days]);
