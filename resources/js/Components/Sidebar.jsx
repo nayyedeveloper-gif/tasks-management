@@ -253,6 +253,16 @@ export default function Sidebar() {
     const sidebarData = props.sidebar || { spaces: [], channels: [], directMessages: [], allMembers: [] };
     const { spaces = [], channels = [], directMessages = [], allMembers = [] } = sidebarData;
     const badges = props.badges || {};
+    const [memberSearch, setMemberSearch] = useState('');
+
+    const filteredMembers = useMemo(() => {
+        if (!memberSearch.trim()) return allMembers;
+        const q = memberSearch.toLowerCase().trim();
+        return allMembers.filter(m => 
+            m.name?.toLowerCase().includes(q) || 
+            m.email?.toLowerCase().includes(q)
+        );
+    }, [allMembers, memberSearch]);
 
     const railItemsWithBadges = useMemo(() => {
         return railItems.map(item => ({
@@ -541,42 +551,71 @@ export default function Sidebar() {
                                 </div>
 
                                 {/* Direct Messages */}
-                                <div className="flex items-center justify-between px-3 pt-3 pb-1">
-                                    <span className="text-[10px] font-semibold uppercase tracking-wider text-neutral-500">
-                                        Members
-                                    </span>
-                                </div>
-                                <div className="space-y-0.5">
-                                    {allMembers.length === 0 && (
-                                        <div className="px-3 py-1 text-xs text-neutral-500 italic">
-                                            No members yet
+                                <div className="flex flex-col gap-2 mt-4">
+                                    <div className="flex items-center justify-between px-3">
+                                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-neutral-600">
+                                            Members
+                                        </span>
+                                        <span className="text-[9px] bg-neutral-800 text-neutral-500 px-1.5 py-0.5 rounded-full font-bold">
+                                            {filteredMembers.length}
+                                        </span>
+                                    </div>
+
+                                    {/* Member Search */}
+                                    <div className="px-3 mb-1">
+                                        <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-neutral-950 border border-neutral-800 focus-within:border-purple-500/40 transition-all shadow-inner group">
+                                            <Search size={12} className="text-neutral-600 group-focus-within:text-purple-500/50 transition-colors" />
+                                            <input
+                                                id="member-sidebar-search"
+                                                name="member-sidebar-search"
+                                                type="text"
+                                                value={memberSearch}
+                                                onChange={(e) => setMemberSearch(e.target.value)}
+                                                placeholder="Search members..."
+                                                className="bg-transparent border-none p-0 text-[11px] text-white placeholder:text-neutral-700 focus:ring-0 w-full font-medium"
+                                            />
                                         </div>
-                                    )}
-                                    {allMembers.map((user) => {
-                                        const unreadCount = (badges.unreadBySender || {})[user.id] || 0;
-                                        return (
-                                            <Link
-                                                key={user.id}
-                                                href={route('messages.index', { user: user.id })}
-                                                className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm hover:bg-neutral-800/70 hover:text-white ${
-                                                    url.includes(`user=${user.id}`) ? 'bg-neutral-800 text-white' : 'text-neutral-300'
-                                                }`}
-                                                style={{ paddingLeft: 28 }}
-                                            >
-                                                <div className="w-5 h-5 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-[10px] font-bold text-white shrink-0">
-                                                    {user.name.charAt(0).toUpperCase()}
+                                    </div>
+
+                                    <div className="space-y-0.5 max-h-[300px] overflow-y-auto custom-scrollbar px-1">
+                                        {filteredMembers.length === 0 ? (
+                                            <div className="px-3 py-6 text-center">
+                                                <div className="w-8 h-8 rounded-full bg-neutral-900 mx-auto flex items-center justify-center mb-2">
+                                                    <Search size={14} className="text-neutral-700" />
                                                 </div>
-                                                <span className={`flex-1 truncate ${unreadCount > 0 ? 'font-bold text-white' : ''}`}>
-                                                    {user.name}
-                                                </span>
-                                                {unreadCount > 0 && (
-                                                    <span className="w-4 h-4 bg-purple-600 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
-                                                        {unreadCount > 9 ? '9+' : unreadCount}
+                                                <p className="text-[10px] text-neutral-600 font-bold uppercase tracking-wider">No results</p>
+                                            </div>
+                                        ) : filteredMembers.map((user) => {
+                                            const unreadCount = (badges.unreadBySender || {})[user.id] || 0;
+                                            const isUserActive = url.includes(`user=${user.id}`);
+                                            return (
+                                                <Link
+                                                    key={user.id}
+                                                    href={route('messages.index', { user: user.id })}
+                                                    className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-all duration-200 ${
+                                                        isUserActive 
+                                                            ? 'bg-neutral-800 text-white shadow-sm' 
+                                                            : 'text-neutral-400 hover:bg-neutral-800/60 hover:text-white'
+                                                    }`}
+                                                >
+                                                    <div className="relative shrink-0">
+                                                        <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-neutral-700 to-neutral-800 flex items-center justify-center text-[10px] font-black text-neutral-300 shadow-inner border border-neutral-700/50 group-hover:scale-105 transition-transform">
+                                                            {user.name.charAt(0).toUpperCase()}
+                                                        </div>
+                                                        <div className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-green-500 border-2 border-neutral-900 shadow-sm" />
+                                                    </div>
+                                                    <span className={`flex-1 truncate ${unreadCount > 0 || isUserActive ? 'font-bold' : 'font-medium'}`}>
+                                                        {user.name}
                                                     </span>
-                                                )}
-                                            </Link>
-                                        );
-                                    })}
+                                                    {unreadCount > 0 && (
+                                                        <span className="w-4 h-4 bg-purple-600 text-white text-[9px] font-black rounded-full flex items-center justify-center shadow-lg shadow-purple-600/20 animate-bounce">
+                                                            {unreadCount > 9 ? '9+' : unreadCount}
+                                                        </span>
+                                                    )}
+                                                </Link>
+                                            );
+                                        })}
+                                    </div>
                                 </div>
                             </div>
                         )}
