@@ -131,11 +131,11 @@ class HandleInertiaRequests extends Middleware
         $spaces = $spacesQuery->with([
                 'children',
                 'folders' => fn ($q) => $q->select('id', 'space_id', 'name', 'color', 'position')
-                    ->withCount('tasks as active_tasks_count'),
+                    ->withCount(['tasks as active_tasks_count' => fn($q) => $q->whereIn('status', ['todo', 'in_progress', 'pending'])]),
                 'folders.lists' => fn ($q) => $q->select('id', 'space_id', 'folder_id', 'name', 'color', 'position')
-                    ->withCount('tasks as active_tasks_count'),
+                    ->withCount(['tasks as active_tasks_count' => fn($q) => $q->whereIn('status', ['todo', 'in_progress', 'pending'])]),
                 'lists' => fn ($q) => $q->select('id', 'space_id', 'folder_id', 'name', 'color', 'position')
-                    ->withCount('tasks as active_tasks_count'),
+                    ->withCount(['tasks as active_tasks_count' => fn($q) => $q->whereIn('status', ['todo', 'in_progress', 'pending'])]),
             ])
             ->orderBy('created_at', 'desc')
             ->get(['id', 'name', 'parent_id', 'color', 'icon']);
