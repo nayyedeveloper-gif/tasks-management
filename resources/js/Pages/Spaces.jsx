@@ -3,11 +3,25 @@ import { useState } from 'react';
 import HomeShell from '@/Components/HomeShell';
 import { Layers, Plus, Trash2, Edit3, ArrowRight, X, Search } from 'lucide-react';
 
+const SPACE_COLORS = [
+    '#7c3aed', // Purple
+    '#ec4899', // Pink
+    '#ef4444', // Red
+    '#f97316', // Orange
+    '#eab308', // Yellow
+    '#22c55e', // Green
+    '#06b6d4', // Cyan
+    '#3b82f6', // Blue
+    '#6366f1', // Indigo
+    '#64748b', // Slate
+];
+
 function SpaceModal({ initial, parent, onClose }) {
     const isEdit = !!initial?.id;
     const { data, setData, post, put, processing, errors, reset } = useForm({
         name: initial?.name || '',
         description: initial?.description || '',
+        color: initial?.color || '#7c3aed',
         parent_id: parent?.id || initial?.parent_id || null,
     });
 
@@ -50,6 +64,22 @@ function SpaceModal({ initial, parent, onClose }) {
                             className="mt-1 w-full px-3 py-2 rounded-md bg-neutral-800 border border-neutral-700 text-sm text-white outline-none focus:border-purple-500"
                         />
                     </div>
+                    <div>
+                        <label className="text-xs text-neutral-400">Color</label>
+                        <div className="flex flex-wrap gap-2 mt-2">
+                            {SPACE_COLORS.map((c) => (
+                                <button
+                                    key={c}
+                                    type="button"
+                                    onClick={() => setData('color', c)}
+                                    className={`w-6 h-6 rounded-full border-2 transition-transform hover:scale-110 ${
+                                        data.color === c ? 'border-white scale-110' : 'border-transparent'
+                                    }`}
+                                    style={{ backgroundColor: c }}
+                                />
+                            ))}
+                        </div>
+                    </div>
                 </div>
                 <div className="px-4 py-3 border-t border-neutral-800 flex justify-end gap-2">
                     <button type="button" onClick={onClose} className="px-3 py-1.5 text-sm text-neutral-300 hover:text-white">Cancel</button>
@@ -65,11 +95,15 @@ function SpaceModal({ initial, parent, onClose }) {
 function SpaceCard({ space, onEdit, onAddChild, onDelete }) {
     const counts = (space.lists?.length || 0) + (space.folders?.length || 0);
     return (
-        <div className="group rounded-lg border border-neutral-800 bg-neutral-900/40 hover:border-neutral-700 hover:bg-neutral-900 transition flex flex-col">
+        <div 
+            className="group rounded-lg border border-neutral-800 bg-neutral-900/40 hover:border-neutral-700 hover:bg-neutral-900 transition flex flex-col overflow-hidden"
+            style={{ borderLeft: `3px solid ${space.color || '#7c3aed'}` }}
+        >
             <div className="p-4 flex-1">
                 <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
-                        <Link href={route('spaces.show', space.id)} className="text-sm font-semibold text-white hover:text-purple-300 truncate block">
+                        <Link href={route('spaces.show', space.id)} className="text-sm font-semibold text-white hover:text-purple-300 truncate block flex items-center gap-2">
+                            <Layers size={14} style={{ color: space.color || '#7c3aed' }} />
                             {space.name}
                         </Link>
                         {space.description && (

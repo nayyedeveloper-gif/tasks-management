@@ -38,12 +38,14 @@ class SpaceController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
+            'color' => 'nullable|string|max:20',
             'parent_id' => 'nullable|exists:spaces,id',
         ]);
 
         $space = Space::create([
             'name' => $validated['name'],
             'description' => $validated['description'] ?? null,
+            'color' => $validated['color'] ?? '#7c3aed', // Default purple
             'parent_id' => $validated['parent_id'] ?? null,
             'created_by' => auth()->id(),
         ]);
@@ -114,6 +116,7 @@ class SpaceController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
+            'color' => 'nullable|string|max:20',
         ]);
 
         $space = Space::findOrFail($id);

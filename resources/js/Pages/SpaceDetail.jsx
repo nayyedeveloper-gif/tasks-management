@@ -105,10 +105,24 @@ function NewFolderForm({ spaceId, onDone }) {
     );
 }
 
+const SPACE_COLORS = [
+    '#7c3aed', // Purple
+    '#ec4899', // Pink
+    '#ef4444', // Red
+    '#f97316', // Orange
+    '#eab308', // Yellow
+    '#22c55e', // Green
+    '#06b6d4', // Cyan
+    '#3b82f6', // Blue
+    '#6366f1', // Indigo
+    '#64748b', // Slate
+];
+
 function RenameModal({ entity, label, routeName, onClose }) {
     const { data, setData, put, processing, errors } = useForm({
         name: entity.name || '',
         description: entity.description || '',
+        color: entity.color || '#7c3aed',
     });
     const submit = (e) => {
         e.preventDefault();
@@ -122,7 +136,7 @@ function RenameModal({ entity, label, routeName, onClose }) {
                 className="w-full max-w-sm rounded-xl bg-neutral-900 border border-neutral-800 shadow-2xl overflow-hidden"
             >
                 <div className="px-5 py-4 border-b border-neutral-800 flex items-center justify-between">
-                    <h2 className="text-sm font-semibold text-white">Rename {label}</h2>
+                    <h2 className="text-sm font-semibold text-white">Edit {label}</h2>
                     <button type="button" onClick={onClose} className="p-1 text-neutral-400 hover:text-white">
                         <X size={14} />
                     </button>
@@ -140,15 +154,33 @@ function RenameModal({ entity, label, routeName, onClose }) {
                         {errors.name && <p className="mt-1 text-xs text-red-400">{errors.name}</p>}
                     </div>
                     {label === 'space' && (
-                        <div>
-                            <label className="text-xs font-medium text-neutral-400">Description</label>
-                            <textarea
-                                value={data.description}
-                                onChange={(e) => setData('description', e.target.value)}
-                                rows={3}
-                                className="mt-1.5 w-full px-3 py-2 rounded-lg bg-neutral-950 border border-neutral-800 text-sm text-white outline-none focus:border-purple-500 resize-none"
-                            />
-                        </div>
+                        <>
+                            <div>
+                                <label className="text-xs font-medium text-neutral-400">Description</label>
+                                <textarea
+                                    value={data.description}
+                                    onChange={(e) => setData('description', e.target.value)}
+                                    rows={3}
+                                    className="mt-1.5 w-full px-3 py-2 rounded-lg bg-neutral-950 border border-neutral-800 text-sm text-white outline-none focus:border-purple-500 resize-none"
+                                />
+                            </div>
+                            <div>
+                                <label className="text-xs font-medium text-neutral-400">Color</label>
+                                <div className="flex flex-wrap gap-2 mt-2">
+                                    {SPACE_COLORS.map((c) => (
+                                        <button
+                                            key={c}
+                                            type="button"
+                                            onClick={() => setData('color', c)}
+                                            className={`w-6 h-6 rounded-full border-2 transition-transform hover:scale-110 ${
+                                                data.color === c ? 'border-white scale-110' : 'border-transparent'
+                                            }`}
+                                            style={{ backgroundColor: c }}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+                        </>
                     )}
                 </div>
                 <div className="px-5 py-3 border-t border-neutral-800 flex justify-end gap-2">
@@ -344,6 +376,12 @@ export default function SpaceDetail({ space }) {
                             <ArrowLeft size={13} /> Spaces
                         </Link>
                         <span className="text-neutral-700">/</span>
+                        <div 
+                            className="w-5 h-5 rounded-md flex items-center justify-center shrink-0 shadow-sm"
+                            style={{ backgroundColor: space.color || '#7c3aed' }}
+                        >
+                            <Layers size={12} className="text-white" />
+                        </div>
                         <span className="font-semibold">{space.name}</span>
                     </span>
                 }

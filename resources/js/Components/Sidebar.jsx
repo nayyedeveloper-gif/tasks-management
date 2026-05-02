@@ -165,7 +165,7 @@ function SpaceNode({ space, level, currentUrl, expanded, onToggle }) {
                             : 'text-neutral-300 hover:bg-neutral-800/70 hover:text-white'
                     }`}
                 >
-                    <Layers size={14} className="text-neutral-400 shrink-0" />
+                    <Layers size={14} style={{ color: space.color || '#94a3b8' }} className="shrink-0" />
                     <span className="flex-1 truncate">{space.name}</span>
                 </Link>
             </div>

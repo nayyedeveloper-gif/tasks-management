@@ -1,10 +1,24 @@
 import { useForm } from '@inertiajs/react';
 import { Layers, X } from 'lucide-react';
 
+const SPACE_COLORS = [
+    '#7c3aed', // Purple
+    '#ec4899', // Pink
+    '#ef4444', // Red
+    '#f97316', // Orange
+    '#eab308', // Yellow
+    '#22c55e', // Green
+    '#06b6d4', // Cyan
+    '#3b82f6', // Blue
+    '#6366f1', // Indigo
+    '#64748b', // Slate
+];
+
 export default function NewSpaceModal({ onClose }) {
     const { data, setData, post, processing, errors, reset } = useForm({
         name: '',
         description: '',
+        color: '#7c3aed',
     });
 
     const submit = (e) => {
@@ -50,6 +64,22 @@ export default function NewSpaceModal({ onClose }) {
                             rows={3}
                             className="mt-1 w-full px-3 py-2 rounded-md bg-neutral-800 border border-neutral-700 text-sm text-white outline-none focus:border-purple-500"
                         />
+                    </div>
+                    <div>
+                        <label className="text-xs text-neutral-400">Color</label>
+                        <div className="flex flex-wrap gap-2 mt-2">
+                            {SPACE_COLORS.map((c) => (
+                                <button
+                                    key={c}
+                                    type="button"
+                                    onClick={() => setData('color', c)}
+                                    className={`w-6 h-6 rounded-full border-2 transition-transform hover:scale-110 ${
+                                        data.color === c ? 'border-white scale-110' : 'border-transparent'
+                                    }`}
+                                    style={{ backgroundColor: c }}
+                                />
+                            ))}
+                        </div>
                     </div>
                 </div>
                 <div className="flex justify-end gap-2 px-4 py-3 border-t border-neutral-800">
