@@ -14,13 +14,23 @@ class TeamController extends Controller
 {
     public function index(): Response
     {
-        $teams = Team::with(['members:id,name,email,role,title'])
-            ->withCount('members')
-            ->orderBy('name')
-            ->get();
+        $query = Team::with(['members:id,name,email,role,title'])
+            ->withCount('members');
 
-        $users = User::select('id', 'name', 'email', 'role', 'title')
-            ->orderBy('name')
+        // If not admin, restrict to teams the user is a member of
+        if (auth()->user()->role_id !== 1) {
+            $query->whereHas('members', function ($q) {
+                $q->where('user_id', auth()->id());
+            });
+        }
+
+        $teams = $query->orderBy('name')->get();
+
+        $usersQuery = User::select('id', 'name', 'email', 'role', 'title');
+        
+        // If not admin, only show users in the same teams? 
+        // For now, let's just restrict the teams themselves.
+        $users = $usersQuery->orderBy('name')
             ->get()
             ->map(function (User $user) {
                 // Tasks the user owns: split by closed-type status if list has statuses
