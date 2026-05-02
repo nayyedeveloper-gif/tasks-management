@@ -1,5 +1,6 @@
 import { Link, router, useForm } from '@inertiajs/react';
 import { useMemo, useState, useEffect, useRef } from 'react';
+import axios from 'axios';
 import Sidebar from '@/Components/Sidebar';
 import TaskDrawer from '@/Components/TaskDrawer';
 import StatusManager from '@/Components/StatusManager';
@@ -33,23 +34,166 @@ import {
     PlusCircle,
     Mail,
     FileText,
+    Search,
+    User,
 } from 'lucide-react';
 
 const PRIORITIES = [
-    { id: 'urgent', label: 'Urgent', tone: 'bg-red-500/20 text-red-300' },
-    { id: 'high', label: 'High', tone: 'bg-orange-500/20 text-orange-300' },
-    { id: 'medium', label: 'Medium', tone: 'bg-yellow-500/20 text-yellow-300' },
-    { id: 'low', label: 'Low', tone: 'bg-neutral-600/40 text-neutral-300' },
+    { id: 'urgent', label: 'Urgent', color: '#ef4444' },
+    { id: 'high', label: 'High', color: '#f97316' },
+    { id: 'medium', label: 'Medium', color: '#eab308' },
+    { id: 'low', label: 'Low', color: '#6b7280' },
 ];
 
-const priorityTone = (p) =>
-    PRIORITIES.find((x) => x.id === p)?.tone ?? 'bg-neutral-700 text-neutral-200';
+function priorityTone(p) {
+    switch (p) {
+        case 'urgent': return 'bg-red-500/20 text-red-300 border-red-500/30';
+        case 'high': return 'bg-orange-500/20 text-orange-300 border-orange-500/30';
+        case 'medium': return 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30';
+        case 'low': return 'bg-neutral-700 text-neutral-300 border-neutral-600';
+        default: return 'bg-neutral-700 text-neutral-300';
+    }
+}
+
+function priorityFlag(p) {
+    const color = PRIORITIES.find(x => x.id === p)?.color || '#6b7280';
+    return <span className="text-[10px] font-bold" style={{ color }}>●</span>;
+}
 
 function statusStyle(color) {
     return {
         backgroundColor: `${color}33`,
         color,
     };
+}
+
+function formatDate(dateStr) {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+function isOverdue(dateStr) {
+    if (!dateStr) return false;
+    const today = new Date().toISOString().split('T')[0];
+    return dateStr < today;
+}
+
+let _membersCache = null;
+let _membersPromise = null;
+function fetchMembers() {
+    if (_membersCache) return Promise.resolve(_membersCache);
+    if (_membersPromise) return _membersPromise;
+    _membersPromise = axios.get(route('members.index'))
+        .then(r => {
+            _membersCache = r.data?.users || [];
+            return _membersCache;
+        })
+        .finally(() => { _membersPromise = null; });
+    return _membersPromise;
+}
+
+function AssigneePicker({ assigned, onChange, compact = false }) {
+    const [open, setOpen] = useState(false);
+    const [members, setMembers] = useState([]);
+    const [search, setSearch] = useState('');
+    const ref = useRef(null);
+
+    useEffect(() => {
+        if (!open) return;
+        fetchMembers().then(setMembers).catch(() => setMembers([]));
+        const onClickOutside = (e) => {
+            if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+        };
+        document.addEventListener('mousedown', onClickOutside);
+        return () => document.removeEventListener('mousedown', onClickOutside);
+    }, [open]);
+
+    const filtered = useMemo(() => {
+        if (!search.trim()) return members;
+        const q = search.toLowerCase();
+        return members.filter(m => m.name?.toLowerCase().includes(q) || m.email?.toLowerCase().includes(q));
+    }, [members, search]);
+
+    const handlePick = (e, userId) => {
+        e.stopPropagation();
+        setOpen(false);
+        onChange?.(userId);
+    };
+
+    return (
+        <div className="relative inline-block" ref={ref} onClick={(e) => e.stopPropagation()}>
+            <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); setOpen(o => !o); }}
+                className={`flex items-center gap-1.5 hover:bg-neutral-800/60 rounded px-1.5 py-0.5 transition ${compact ? '' : 'max-w-full'}`}
+                title={assigned?.name || 'Unassigned'}
+            >
+                {assigned ? (
+                    <>
+                        <div className="w-5 h-5 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0">
+                            {assigned.name.charAt(0).toUpperCase()}
+                        </div>
+                        {!compact && (
+                            <span className="text-xs text-neutral-300 truncate">{assigned.name}</span>
+                        )}
+                    </>
+                ) : (
+                    <>
+                        <div className="w-5 h-5 rounded-full border border-dashed border-neutral-600 flex items-center justify-center flex-shrink-0">
+                            <User size={10} className="text-neutral-500" />
+                        </div>
+                        {!compact && <span className="text-xs text-neutral-500">—</span>}
+                    </>
+                )}
+            </button>
+
+            {open && (
+                <div className="absolute z-50 mt-1 left-0 w-56 bg-neutral-900 border border-neutral-700 rounded-md shadow-xl overflow-hidden text-left">
+                    <div className="p-2 border-b border-neutral-800">
+                        <div className="relative">
+                            <Search size={12} className="absolute left-2 top-1/2 -translate-y-1/2 text-neutral-500" />
+                            <input
+                                autoFocus
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                placeholder="Search members..."
+                                className="w-full bg-neutral-950 border border-neutral-800 rounded pl-7 pr-2 py-1 text-xs focus:outline-none focus:border-purple-500"
+                            />
+                        </div>
+                    </div>
+                    <div className="max-h-60 overflow-y-auto py-1">
+                        <button
+                            type="button"
+                            onClick={(e) => handlePick(e, null)}
+                            className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-neutral-300 hover:bg-neutral-800"
+                        >
+                            <div className="w-5 h-5 rounded-full border border-dashed border-neutral-600 flex items-center justify-center">
+                                <User size={10} className="text-neutral-500" />
+                            </div>
+                            Unassigned
+                        </button>
+                        {filtered.map(m => (
+                            <button
+                                key={m.id}
+                                type="button"
+                                onClick={(e) => handlePick(e, m.id)}
+                                className={`w-full flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-neutral-800 ${assigned?.id === m.id ? 'text-purple-300 bg-neutral-800/40' : 'text-neutral-300'}`}
+                            >
+                                <div className="w-5 h-5 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-[10px] font-bold text-white">
+                                    {m.name.charAt(0).toUpperCase()}
+                                </div>
+                                <span className="truncate">{m.name}</span>
+                            </button>
+                        ))}
+                        {filtered.length === 0 && (
+                            <div className="px-3 py-2 text-[11px] text-neutral-500 italic">No members found</div>
+                        )}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
 }
 
 export default function ListShow({ list, movableSpaces = [] }) {
@@ -174,6 +318,10 @@ export default function ListShow({ list, movableSpaces = [] }) {
         router.put(route('tasks.update', taskId), { status }, { preserveScroll: true });
     };
 
+    const updateAssignee = (taskId, assigned_to) => {
+        router.put(route('tasks.update', taskId), { assigned_to }, { preserveScroll: true });
+    };
+
     const updateDueDate = (taskId, due_date) => {
         router.put(route('tasks.update', taskId), { due_date }, { preserveScroll: true });
     };
@@ -192,12 +340,15 @@ export default function ListShow({ list, movableSpaces = [] }) {
     /* ---------- LIST VIEW ---------- */
     const renderListView = () => (
         <div className="bg-neutral-900 border border-neutral-800 rounded-lg overflow-hidden">
-            <div className="grid grid-cols-12 gap-2 px-4 py-2 bg-neutral-900 border-b border-neutral-800 text-[11px] uppercase tracking-wider text-neutral-500">
-                <div className="col-span-5">Name</div>
-                <div className="col-span-2">Assignee</div>
-                <div className="col-span-2">Due date</div>
-                <div className="col-span-1">Priority</div>
-                <div className="col-span-2">Status</div>
+            <div className="grid grid-cols-[3fr_1.5fr_1.2fr_1.2fr_1.2fr_1.2fr_1.5fr_32px] gap-2 px-4 py-2 bg-neutral-900 border-b border-neutral-800 text-[11px] uppercase tracking-wider text-neutral-500 items-center">
+                <div className="">Name</div>
+                <div className="">Assignee</div>
+                <div className="">Start date</div>
+                <div className="">Due date</div>
+                <div className="">Date done</div>
+                <div className="">Priority</div>
+                <div className="">Status</div>
+                <div className=""></div>
             </div>
             {tasks.length === 0 && (
                 <div className="px-4 py-8 text-center text-neutral-500 text-sm">
@@ -208,11 +359,11 @@ export default function ListShow({ list, movableSpaces = [] }) {
                 const st = findStatus(task.status);
                 return (
                     <div key={task.id}>
-                        <div className="grid grid-cols-12 gap-2 px-4 py-2.5 border-b border-neutral-800/60 hover:bg-neutral-800/40 group">
-                            <div className="col-span-5 flex items-center gap-2">
+                        <div className="grid grid-cols-[3fr_1.5fr_1.2fr_1.2fr_1.2fr_1.2fr_1.5fr_32px] gap-2 px-4 py-2.5 border-b border-neutral-800/60 hover:bg-neutral-800/40 group items-center">
+                            <div className="flex items-center gap-2 overflow-hidden">
                                 <button
                                     onClick={() => toggleSubtasks(task.id)}
-                                    className="text-neutral-500 hover:text-white"
+                                    className="text-neutral-500 hover:text-white shrink-0"
                                     title="Toggle subtasks"
                                 >
                                     {(task.subtasks || []).length > 0 ? (
@@ -226,7 +377,7 @@ export default function ListShow({ list, movableSpaces = [] }) {
                                     )}
                                 </button>
                                 <span
-                                    className="w-3 h-3 rounded-full"
+                                    className="w-2 h-2 rounded-full shrink-0"
                                     style={{ background: st?.color || '#6b7280' }}
                                 />
                                 <button
@@ -236,29 +387,43 @@ export default function ListShow({ list, movableSpaces = [] }) {
                                     {task.title}
                                 </button>
                                 {(task.subtasks || []).length > 0 && (
-                                    <span className="text-xs text-neutral-500">
+                                    <span className="text-[10px] text-neutral-500 bg-neutral-800 px-1.5 py-0.5 rounded shrink-0">
                                         {task.subtasks.length}
                                     </span>
                                 )}
                             </div>
-                            <div className="col-span-2 text-xs text-neutral-400">
-                                {task.assigned_to?.name || '—'}
+                            <div className="">
+                                <AssigneePicker
+                                    assigned={task.assigned_to}
+                                    onChange={(uid) => updateAssignee(task.id, uid)}
+                                />
                             </div>
-                            <div className="col-span-2 text-xs text-neutral-400">
-                                {task.due_date || '—'}
+                            <div className="text-xs text-neutral-400">
+                                {task.start_date ? formatDate(task.start_date) : '—'}
                             </div>
-                            <div className="col-span-1">
+                            <div className="text-xs text-neutral-400">
+                                {task.due_date ? (
+                                    <span className={isOverdue(task.due_date) ? 'text-red-400' : ''}>
+                                        {formatDate(task.due_date)}
+                                    </span>
+                                ) : '—'}
+                            </div>
+                            <div className="text-xs text-neutral-400">
+                                {task.date_done ? formatDate(task.date_done) : '—'}
+                            </div>
+                            <div className="">
                                 <span
-                                    className={`px-2 py-0.5 rounded text-[11px] ${priorityTone(task.priority)}`}
+                                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] border border-neutral-700 capitalize ${priorityTone(task.priority || 'medium')}`}
                                 >
+                                    {priorityFlag(task.priority || 'medium')}
                                     {task.priority || 'medium'}
                                 </span>
                             </div>
-                            <div className="col-span-2 flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2">
                                 <select
                                     value={task.status}
                                     onChange={(e) => updateStatus(task.id, e.target.value)}
-                                    className="text-[11px] rounded px-2 py-0.5 border-none"
+                                    className="text-[10px] rounded px-2 py-0.5 border-none w-full max-w-[120px]"
                                     style={statusStyle(st?.color || '#6b7280')}
                                 >
                                     {statuses.map((s) => (
@@ -267,9 +432,11 @@ export default function ListShow({ list, movableSpaces = [] }) {
                                         </option>
                                     ))}
                                 </select>
+                            </div>
+                            <div className="">
                                 <button
                                     onClick={() => deleteTask(task.id)}
-                                    className="text-neutral-500 hover:text-red-400 opacity-0 group-hover:opacity-100"
+                                    className="text-neutral-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition"
                                 >
                                     <Trash2 size={14} />
                                 </button>
@@ -281,38 +448,53 @@ export default function ListShow({ list, movableSpaces = [] }) {
                                 return (
                                     <div
                                         key={sub.id}
-                                        className="grid grid-cols-12 gap-2 px-4 py-2 pl-12 border-b border-neutral-800/60 hover:bg-neutral-800/30 text-sm"
+                                        className="grid grid-cols-[3fr_1.5fr_1.2fr_1.2fr_1.2fr_1.2fr_1.5fr_32px] gap-2 px-4 py-2 pl-12 border-b border-neutral-800/60 hover:bg-neutral-800/30 items-center"
                                     >
-                                        <div className="col-span-5 flex items-center gap-2 text-neutral-300">
+                                        <div className="flex items-center gap-2 overflow-hidden text-neutral-300">
                                             <span
-                                                className="w-2.5 h-2.5 rounded-full"
+                                                className="w-2 h-2 rounded-full shrink-0"
                                                 style={{ background: subSt?.color || '#6b7280' }}
                                             />
                                             <button
                                                 onClick={() => setActiveTaskId(sub.id)}
-                                                className="hover:underline"
+                                                className="text-sm truncate hover:underline"
                                             >
                                                 {sub.title}
                                             </button>
                                         </div>
-                                        <div className="col-span-2 text-xs text-neutral-500">
-                                            {sub.assigned_to?.name || '—'}
+                                        <div className="">
+                                            <AssigneePicker
+                                                assigned={sub.assigned_to}
+                                                onChange={(uid) => updateAssignee(sub.id, uid)}
+                                                compact
+                                            />
                                         </div>
-                                        <div className="col-span-2 text-xs text-neutral-500">
-                                            {sub.due_date || '—'}
+                                        <div className="text-xs text-neutral-500">
+                                            {sub.start_date ? formatDate(sub.start_date) : '—'}
                                         </div>
-                                        <div className="col-span-1">
+                                        <div className="text-xs text-neutral-500">
+                                            {sub.due_date ? (
+                                                <span className={isOverdue(sub.due_date) ? 'text-red-400' : ''}>
+                                                    {formatDate(sub.due_date)}
+                                                </span>
+                                            ) : '—'}
+                                        </div>
+                                        <div className="text-xs text-neutral-500">
+                                            {sub.date_done ? formatDate(sub.date_done) : '—'}
+                                        </div>
+                                        <div className="">
                                             <span
-                                                className={`px-2 py-0.5 rounded text-[11px] ${priorityTone(sub.priority)}`}
+                                                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] border border-neutral-700 capitalize ${priorityTone(sub.priority || 'medium')}`}
                                             >
+                                                {priorityFlag(sub.priority || 'medium')}
                                                 {sub.priority || 'medium'}
                                             </span>
                                         </div>
-                                        <div className="col-span-2">
+                                        <div className="">
                                             <select
                                                 value={sub.status}
                                                 onChange={(e) => updateStatus(sub.id, e.target.value)}
-                                                className="text-[11px] rounded px-2 py-0.5 border-none"
+                                                className="text-[10px] rounded px-2 py-0.5 border-none w-full max-w-[120px]"
                                                 style={statusStyle(subSt?.color || '#6b7280')}
                                             >
                                                 {statuses.map((s) => (
@@ -322,6 +504,7 @@ export default function ListShow({ list, movableSpaces = [] }) {
                                                 ))}
                                             </select>
                                         </div>
+                                        <div className=""></div>
                                     </div>
                                 );
                             })}
