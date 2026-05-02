@@ -455,24 +455,48 @@ export default function SpaceDetail({ space }) {
                                 </Card>
 
                                 <Card title="Members">
-                                    {(space.users || []).length === 0 ? (
+                                    {((space.users || []).length === 0 && (space.invitations || []).length === 0) ? (
                                         <EmptyCardState
                                             icon={UserIcon}
-                                            title="No specific members added to this space yet."
+                                            title="No members or pending invitations for this space."
                                         />
                                     ) : (
-                                        <div className="space-y-3">
-                                            {space.users.map((u) => (
-                                                <div key={u.id} className="flex items-center gap-3">
-                                                    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-[10px] font-bold text-white uppercase">
-                                                        {u.name.charAt(0)}
-                                                    </div>
-                                                    <div className="flex-1 min-w-0">
-                                                        <div className="text-xs font-medium text-neutral-200 truncate">{u.name}</div>
-                                                        <div className="text-[10px] text-neutral-500 truncate">{u.email}</div>
-                                                    </div>
+                                        <div className="space-y-4">
+                                            {/* Active Members */}
+                                            {space.users && space.users.length > 0 && (
+                                                <div className="space-y-3">
+                                                    <h4 className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider">Active Members</h4>
+                                                    {space.users.map((u) => (
+                                                        <div key={u.id} className="flex items-center gap-3">
+                                                            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-[10px] font-bold text-white uppercase">
+                                                                {u.name.charAt(0)}
+                                                            </div>
+                                                            <div className="flex-1 min-w-0">
+                                                                <div className="text-xs font-medium text-neutral-200 truncate">{u.name}</div>
+                                                                <div className="text-[10px] text-neutral-500 truncate">{u.email}</div>
+                                                            </div>
+                                                        </div>
+                                                    ))}
                                                 </div>
-                                            ))}
+                                            )}
+
+                                            {/* Pending Invitations */}
+                                            {space.invitations && space.invitations.length > 0 && (
+                                                <div className="space-y-3">
+                                                    <h4 className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider">Pending Invitations</h4>
+                                                    {space.invitations.map((inv) => (
+                                                        <div key={inv.id} className="flex items-center gap-3 opacity-60">
+                                                            <div className="w-7 h-7 rounded-full bg-neutral-800 border border-neutral-700 flex items-center justify-center text-[10px] font-bold text-neutral-400 uppercase">
+                                                                ?
+                                                            </div>
+                                                            <div className="flex-1 min-w-0">
+                                                                <div className="text-xs font-medium text-neutral-300 truncate">{inv.email}</div>
+                                                                <div className="text-[10px] text-neutral-500 truncate italic">Awaiting acceptance</div>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
                                         </div>
                                     )}
                                 </Card>
