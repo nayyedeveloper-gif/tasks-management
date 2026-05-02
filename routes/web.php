@@ -113,6 +113,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/folders/{folder}', [FolderController::class, 'destroy'])->name('folders.destroy');
 
     // List routes
+    Route::get('/lists', fn () => redirect()->route('spaces.index'));
     Route::get('/lists/{list}', [TaskListController::class, 'show'])->name('lists.show');
     Route::post('/lists', [TaskListController::class, 'store'])->name('lists.store');
     Route::put('/lists/{list}', [TaskListController::class, 'update'])->name('lists.update');

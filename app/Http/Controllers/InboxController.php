@@ -93,11 +93,15 @@ class InboxController extends Controller
             ->limit(50)
             ->get();
 
-        // Mark replies as read
-        TaskComment::whereHas('task', fn ($q) => $q->where('created_by', $userId))
-            ->where('user_id', '!=', $userId)
-            ->where('is_read', false)
-            ->update(['is_read' => true]);
+        // Mark replies as read if we are on the unread tab
+        if ($tab === 'unread') {
+            TaskComment::whereHas('task', fn ($q) => $q
+                    ->where('created_by', $userId)
+                    ->orWhere('assigned_to', $userId))
+                ->where('user_id', '!=', $userId)
+                ->where('is_read', false)
+                ->update(['is_read' => true]);
+        }
 
         return Inertia::render('Inbox/Replies', [
             'comments' => $comments,
