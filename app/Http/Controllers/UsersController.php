@@ -21,7 +21,7 @@ class UsersController extends Controller
 
         $roles = Role::with('permissions')->get();
         $permissions = Permission::orderBy('module')->orderBy('name')->get();
-        $allSpaces = \App\Models\Space::whereNull('parent_id')->orderBy('name')->get(['id', 'name']);
+        $allSpaces = \App\Models\Space::orderBy('name')->get(['id', 'name']);
 
         return Inertia::render('Users/Index', [
             'users' => $users,
