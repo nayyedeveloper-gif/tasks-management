@@ -1,6 +1,37 @@
 import { useForm } from '@inertiajs/react';
-import { Layers, X, Info, Plus } from 'lucide-react';
+import { 
+    Layers, 
+    X, 
+    Info, 
+    Plus, 
+    Rocket, 
+    Briefcase, 
+    Code, 
+    Palette, 
+    ShoppingCart, 
+    Heart, 
+    Zap, 
+    Target, 
+    Shield, 
+    Globe, 
+    Cpu 
+} from 'lucide-react';
 import { useState } from 'react';
+
+const SPACE_ICONS = [
+    { name: 'Layers', icon: Layers },
+    { name: 'Rocket', icon: Rocket },
+    { name: 'Briefcase', icon: Briefcase },
+    { name: 'Code', icon: Code },
+    { name: 'Palette', icon: Palette },
+    { name: 'Shopping', icon: ShoppingCart },
+    { name: 'Heart', icon: Heart },
+    { name: 'Zap', icon: Zap },
+    { name: 'Target', icon: Target },
+    { name: 'Shield', icon: Shield },
+    { name: 'Globe', icon: Globe },
+    { name: 'Cpu', icon: Cpu },
+];
 
 const SPACE_COLORS = [
     { name: 'Purple', value: '#7c3aed' },
@@ -21,7 +52,10 @@ export default function NewSpaceModal({ onClose }) {
         name: '',
         description: '',
         color: '#7c3aed',
+        icon: 'Layers',
     });
+
+    const SelectedIcon = SPACE_ICONS.find(i => i.name === data.icon)?.icon || Layers;
 
     const submit = (e) => {
         e.preventDefault();
@@ -45,7 +79,7 @@ export default function NewSpaceModal({ onClose }) {
                             className="w-10 h-10 rounded-xl flex items-center justify-center shadow-inner transition-colors duration-300"
                             style={{ backgroundColor: `${data.color}20`, color: data.color }}
                         >
-                            <Layers size={20} />
+                            <SelectedIcon size={20} />
                         </div>
                         <div>
                             <h2 className="text-base font-bold text-white leading-none">Create New Space</h2>
@@ -57,7 +91,7 @@ export default function NewSpaceModal({ onClose }) {
                     </button>
                 </div>
 
-                <div className="p-6 space-y-6">
+                <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
                     {/* Name Input */}
                     <div>
                         <label className="text-xs font-bold text-neutral-400 uppercase tracking-widest mb-2 block">Space Name</label>
@@ -71,16 +105,25 @@ export default function NewSpaceModal({ onClose }) {
                         {errors.name && <div className="text-red-400 text-xs mt-2 flex items-center gap-1"><Info size={12}/> {errors.name}</div>}
                     </div>
 
-                    {/* Description */}
+                    {/* Icon Selection */}
                     <div>
-                        <label className="text-xs font-bold text-neutral-400 uppercase tracking-widest mb-2 block">Description (Optional)</label>
-                        <textarea
-                            value={data.description}
-                            onChange={(e) => setData('description', e.target.value)}
-                            rows={2}
-                            placeholder="What is this space for?"
-                            className="w-full px-4 py-3 rounded-xl bg-neutral-950 border border-neutral-800 text-sm text-white outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500/20 transition-all shadow-inner placeholder:text-neutral-700 resize-none"
-                        />
+                        <label className="text-xs font-bold text-neutral-400 uppercase tracking-widest mb-3 block">Select Icon</label>
+                        <div className="grid grid-cols-6 gap-2">
+                            {SPACE_ICONS.map(({ name, icon: Icon }) => (
+                                <button
+                                    key={name}
+                                    type="button"
+                                    onClick={() => setData('icon', name)}
+                                    className={`h-10 rounded-lg border transition-all duration-200 flex items-center justify-center ${
+                                        data.icon === name 
+                                            ? 'bg-purple-600 text-white border-purple-500 shadow-lg shadow-purple-600/20' 
+                                            : 'bg-neutral-950 border-neutral-800 text-neutral-500 hover:border-neutral-700 hover:text-neutral-300'
+                                    }`}
+                                >
+                                    <Icon size={18} />
+                                </button>
+                            ))}
+                        </div>
                     </div>
 
                     {/* Color Selection */}
@@ -135,6 +178,18 @@ export default function NewSpaceModal({ onClose }) {
                                 </div>
                             </div>
                         )}
+                    </div>
+
+                    {/* Description */}
+                    <div>
+                        <label className="text-xs font-bold text-neutral-400 uppercase tracking-widest mb-2 block">Description (Optional)</label>
+                        <textarea
+                            value={data.description}
+                            onChange={(e) => setData('description', e.target.value)}
+                            rows={2}
+                            placeholder="What is this space for?"
+                            className="w-full px-4 py-3 rounded-xl bg-neutral-950 border border-neutral-800 text-sm text-white outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500/20 transition-all shadow-inner placeholder:text-neutral-700 resize-none"
+                        />
                     </div>
                 </div>
 

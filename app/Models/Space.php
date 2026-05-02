@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Space extends Model
 {
-    protected $fillable = ['name', 'description', 'color', 'parent_id', 'created_by', 'is_personal'];
+    protected $fillable = ['name', 'description', 'color', 'icon', 'parent_id', 'created_by', 'is_personal'];
 
     protected $casts = ['is_personal' => 'boolean'];
 

@@ -11,8 +11,34 @@ import {
     Search, 
     Info, 
     Folder as FolderIcon, 
-    List as ListIcon 
+    List as ListIcon,
+    Rocket, 
+    Briefcase, 
+    Code, 
+    Palette, 
+    ShoppingCart, 
+    Heart, 
+    Zap, 
+    Target, 
+    Shield, 
+    Globe, 
+    Cpu 
 } from 'lucide-react';
+
+const SPACE_ICONS = [
+    { name: 'Layers', icon: Layers },
+    { name: 'Rocket', icon: Rocket },
+    { name: 'Briefcase', icon: Briefcase },
+    { name: 'Code', icon: Code },
+    { name: 'Palette', icon: Palette },
+    { name: 'Shopping', icon: ShoppingCart },
+    { name: 'Heart', icon: Heart },
+    { name: 'Zap', icon: Zap },
+    { name: 'Target', icon: Target },
+    { name: 'Shield', icon: Shield },
+    { name: 'Globe', icon: Globe },
+    { name: 'Cpu', icon: Cpu },
+];
 
 const SPACE_COLORS = [
     { name: 'Purple', value: '#7c3aed' },
@@ -34,8 +60,11 @@ function SpaceModal({ initial, parent, onClose }) {
         name: initial?.name || '',
         description: initial?.description || '',
         color: initial?.color || '#7c3aed',
+        icon: initial?.icon || 'Layers',
         parent_id: parent?.id || initial?.parent_id || null,
     });
+
+    const SelectedIcon = SPACE_ICONS.find(i => i.name === data.icon)?.icon || Layers;
 
     const submit = (e) => {
         e.preventDefault();
@@ -58,7 +87,7 @@ function SpaceModal({ initial, parent, onClose }) {
                             className="w-10 h-10 rounded-xl flex items-center justify-center shadow-inner transition-colors duration-300"
                             style={{ backgroundColor: `${data.color}20`, color: data.color }}
                         >
-                            <Layers size={20} />
+                            <SelectedIcon size={20} />
                         </div>
                         <div>
                             <h2 className="text-base font-bold text-white leading-none">
@@ -71,7 +100,7 @@ function SpaceModal({ initial, parent, onClose }) {
                         <X size={20} />
                     </button>
                 </div>
-                <div className="p-6 space-y-6">
+                <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
                     <div>
                         <label className="text-xs font-bold text-neutral-400 uppercase tracking-widest mb-2 block">Space Name</label>
                         <input
@@ -82,15 +111,27 @@ function SpaceModal({ initial, parent, onClose }) {
                         />
                         {errors.name && <p className="mt-2 text-xs text-red-400 flex items-center gap-1"><Info size={12}/> {errors.name}</p>}
                     </div>
+
                     <div>
-                        <label className="text-xs font-bold text-neutral-400 uppercase tracking-widest mb-2 block">Description (Optional)</label>
-                        <textarea
-                            value={data.description} onChange={(e) => setData('description', e.target.value)}
-                            rows={2}
-                            placeholder="What is this space for?"
-                            className={inputCls + " resize-none"}
-                        />
+                        <label className="text-xs font-bold text-neutral-400 uppercase tracking-widest mb-3 block">Select Icon</label>
+                        <div className="grid grid-cols-6 gap-2">
+                            {SPACE_ICONS.map(({ name, icon: Icon }) => (
+                                <button
+                                    key={name}
+                                    type="button"
+                                    onClick={() => setData('icon', name)}
+                                    className={`h-10 rounded-lg border transition-all duration-200 flex items-center justify-center ${
+                                        data.icon === name 
+                                            ? 'bg-purple-600 text-white border-purple-500 shadow-lg shadow-purple-600/20' 
+                                            : 'bg-neutral-950 border-neutral-800 text-neutral-500 hover:border-neutral-700 hover:text-neutral-300'
+                                    }`}
+                                >
+                                    <Icon size={18} />
+                                </button>
+                            ))}
+                        </div>
                     </div>
+
                     <div>
                         <div className="flex items-center justify-between mb-3">
                             <label className="text-xs font-bold text-neutral-400 uppercase tracking-widest block">Select Space Color</label>
@@ -143,6 +184,16 @@ function SpaceModal({ initial, parent, onClose }) {
                             </div>
                         )}
                     </div>
+
+                    <div>
+                        <label className="text-xs font-bold text-neutral-400 uppercase tracking-widest mb-2 block">Description (Optional)</label>
+                        <textarea
+                            value={data.description} onChange={(e) => setData('description', e.target.value)}
+                            rows={2}
+                            placeholder="What is this space for?"
+                            className={inputCls + " resize-none"}
+                        />
+                    </div>
                 </div>
                 <div className="px-6 py-5 border-t border-neutral-800 flex justify-end gap-3 bg-neutral-900/30">
                     <button type="button" onClick={onClose} className="px-5 py-2 text-sm font-bold text-neutral-400 hover:text-white transition-colors">Cancel</button>
@@ -162,6 +213,7 @@ function SpaceModal({ initial, parent, onClose }) {
 function SpaceCard({ space, onEdit, onAddChild, onDelete }) {
     const counts = (space.lists?.length || 0) + (space.folders?.length || 0);
     const color = space.color || '#7c3aed';
+    const Icon = SPACE_ICONS.find(i => i.name === space.icon)?.icon || Layers;
     
     return (
         <div 
@@ -175,12 +227,15 @@ function SpaceCard({ space, onEdit, onAddChild, onDelete }) {
                     <div className="min-w-0 flex-1">
                         <Link href={route('spaces.show', space.id)} className="group/title flex items-center gap-3">
                             <div 
-                                className="w-3 h-3 rounded-full shrink-0 shadow-sm transition-transform group-hover/title:scale-125" 
+                                className="w-8 h-8 rounded-lg shrink-0 shadow-inner flex items-center justify-center transition-all duration-300 group-hover/title:scale-110" 
                                 style={{ 
-                                    backgroundColor: color,
-                                    boxShadow: `0 0 12px ${color}40`
+                                    backgroundColor: `${color}20`,
+                                    color: color,
+                                    boxShadow: `0 0 15px ${color}15`
                                 }} 
-                            />
+                            >
+                                <Icon size={18} />
+                            </div>
                             <span className="text-base font-bold text-white group-hover/title:text-purple-300 truncate transition-colors">
                                 {space.name}
                             </span>
@@ -206,17 +261,20 @@ function SpaceCard({ space, onEdit, onAddChild, onDelete }) {
                 {space.children?.length > 0 && (
                     <div className="mt-4 pt-4 border-t border-neutral-800/50 space-y-2">
                         <div className="text-[9px] uppercase font-black tracking-widest text-neutral-600 mb-1">Sub-spaces</div>
-                        {space.children.slice(0, 3).map((c) => (
-                            <Link
-                                key={c.id} href={route('spaces.show', c.id)}
-                                className="flex items-center gap-2 text-[11px] text-neutral-400 hover:text-white transition-colors py-0.5"
-                            >
-                                <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: c.color || color }} />
-                                <span className="truncate">{c.name}</span>
-                            </Link>
-                        ))}
+                        {space.children.slice(0, 3).map((c) => {
+                            const ChildIcon = SPACE_ICONS.find(i => i.name === c.icon)?.icon || Layers;
+                            return (
+                                <Link
+                                    key={c.id} href={route('spaces.show', c.id)}
+                                    className="flex items-center gap-2 text-[11px] text-neutral-400 hover:text-white transition-colors py-0.5"
+                                >
+                                    <ChildIcon size={12} style={{ color: c.color || color }} className="opacity-60" />
+                                    <span className="truncate">{c.name}</span>
+                                </Link>
+                            );
+                        })}
                         {space.children.length > 3 && (
-                            <div className="text-[10px] text-neutral-600 font-bold ml-3.5 mt-1">+{space.children.length - 3} more</div>
+                            <div className="text-[10px] text-neutral-600 font-bold ml-4.5 mt-1">+{space.children.length - 3} more</div>
                         )}
                     </div>
                 )}

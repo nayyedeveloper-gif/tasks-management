@@ -30,7 +30,32 @@ import {
     Briefcase,
     Shield,
     Settings,
+    LayoutGrid,
+    LayoutList,
+    Rocket,
+    Code,
+    Palette,
+    ShoppingCart,
+    Heart,
+    Zap,
+    Globe,
+    Cpu,
 } from 'lucide-react';
+
+const SPACE_ICONS = {
+    Layers,
+    Rocket,
+    Briefcase,
+    Code,
+    Palette,
+    ShoppingCart,
+    Heart,
+    Zap,
+    Target,
+    Shield,
+    Globe,
+    Cpu,
+};
 
 const railItems = [
     { id: 'home', label: 'Home', icon: Home, route: 'inbox.index' },
@@ -147,32 +172,37 @@ function FolderNode({ folder, level, currentUrl, expanded, onToggle }) {
 function SpaceNode({ space, level, currentUrl, expanded, onToggle }) {
     const isOpen = expanded[`s-${space.id}`] ?? true;
     const isActive = currentUrl.includes(`/spaces/${space.id}`);
+    const Icon = SPACE_ICONS[space.icon] || Layers;
+
     return (
         <div>
-            <div className="flex items-center group">
+            <div className="flex items-center group px-1">
                 <button
                     onClick={() => onToggle(`s-${space.id}`)}
-                    className="text-neutral-500 hover:text-white p-1"
-                    style={{ marginLeft: level * 16 }}
+                    className="text-neutral-500 hover:text-white p-1 transition-transform"
+                    style={{ marginLeft: level * 12 }}
                 >
                     {isOpen ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
                 </button>
                 <Link
                     href={route('spaces.show', space.id)}
-                    className={`flex-1 flex items-center gap-2.5 px-2 py-1.5 rounded-md text-sm transition-all duration-200 ${
+                    className={`flex-1 flex items-center gap-2.5 px-2 py-1.5 rounded-lg text-sm transition-all duration-200 ${
                         isActive
-                            ? 'bg-neutral-800 text-white shadow-sm'
-                            : 'text-neutral-300 hover:bg-neutral-800/70 hover:text-white'
+                            ? 'bg-neutral-800 text-white shadow-md'
+                            : 'text-neutral-400 hover:bg-neutral-800/60 hover:text-white'
                     }`}
                 >
                     <div 
-                        className="w-2.5 h-2.5 rounded-full shrink-0 shadow-[0_0_10px_rgba(0,0,0,0.5)]" 
+                        className="w-7 h-7 rounded-md shrink-0 flex items-center justify-center transition-all duration-300" 
                         style={{ 
-                            backgroundColor: space.color || '#94a3b8',
-                            boxShadow: `0 0 12px ${(space.color || '#94a3b8')}40`
+                            backgroundColor: `${space.color || '#94a3b8'}15`,
+                            color: space.color || '#94a3b8',
+                            boxShadow: isActive ? `0 0 10px ${(space.color || '#94a3b8')}20` : 'none'
                         }} 
-                    />
-                    <span className={`flex-1 truncate ${isActive ? 'font-bold' : 'font-medium'}`}>{space.name}</span>
+                    >
+                        <Icon size={14} strokeWidth={2.5} />
+                    </div>
+                    <span className={`flex-1 truncate ${isActive ? 'font-black' : 'font-semibold'}`}>{space.name}</span>
                 </Link>
             </div>
             {isOpen && (
