@@ -285,7 +285,7 @@ export default function Sidebar() {
                         );
                     })}
                 </div>
-                <div className="flex flex-col items-center gap-2">
+                <div className="flex flex-col items-center gap-2 pb-4">
                     <Link
                         href={route('invite.index')}
                         className={`w-10 h-10 flex flex-col items-center justify-center rounded-md text-[10px] gap-0.5 ${
@@ -298,6 +298,10 @@ export default function Sidebar() {
                         <UserPlus size={18} />
                         <span>Invite</span>
                     </Link>
+                    
+                    <div className="border-t border-neutral-800 w-8 my-1" />
+                    
+                    <ProfileMenu user={auth?.user} initial={userInitial} />
                 </div>
             </div>
 
@@ -560,47 +564,48 @@ function ProfileMenu({ user, initial }) {
     }, [open]);
 
     return (
-        <div ref={ref} className="fixed top-3 right-4 z-50">
+        <div ref={ref} className="relative">
             <button
                 type="button"
                 onClick={() => setOpen(o => !o)}
-                className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-semibold text-base shadow-lg ring-2 ring-neutral-900 hover:ring-neutral-700 transition"
+                className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-sm shadow-lg ring-2 ring-neutral-900 hover:ring-purple-500/50 transition-all duration-200 active:scale-90"
                 title={user?.name || 'Profile'}
             >
                 {initial}
             </button>
             {open && (
-                <div className="absolute right-0 mt-2 w-56 bg-neutral-900 border border-neutral-700 rounded-lg shadow-2xl overflow-hidden">
-                    <div className="px-4 py-3 border-b border-neutral-800">
-                        <div className="text-sm font-semibold text-white truncate">{user?.name || 'User'}</div>
-                        <div className="text-xs text-neutral-400 truncate">{user?.email}</div>
+                <div className="absolute left-full bottom-0 ml-3 w-64 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl overflow-hidden z-[100] animate-in slide-in-from-left-2 duration-200">
+                    <div className="px-5 py-4 border-b border-neutral-800 bg-neutral-900/50">
+                        <div className="text-sm font-bold text-white truncate">{user?.name || 'User'}</div>
+                        <div className="text-xs text-neutral-500 truncate mt-0.5">{user?.email}</div>
                     </div>
-                    <div className="py-1">
+                    <div className="py-1.5">
                         <Link
                             href={route('profile.edit')}
                             onClick={() => setOpen(false)}
-                            className="flex items-center gap-2 px-4 py-2 text-sm text-neutral-200 hover:bg-neutral-800"
+                            className="flex items-center gap-3 px-4 py-2.5 text-sm text-neutral-300 hover:bg-neutral-800 hover:text-white transition-colors"
                         >
-                            <Settings size={14} className="text-neutral-400" />
+                            <Settings size={16} className="text-neutral-500" />
                             <span>Profile Settings</span>
                         </Link>
                         {(user?.role === 'admin' || user?.role === 'owner' || user?.role_id === 1) && (
                             <Link
                                 href={route('users.index')}
                                 onClick={() => setOpen(false)}
-                                className="flex items-center gap-2 px-4 py-2 text-sm text-neutral-200 hover:bg-neutral-800"
+                                className="flex items-center gap-3 px-4 py-2.5 text-sm text-neutral-300 hover:bg-neutral-800 hover:text-white transition-colors"
                             >
-                                <Shield size={14} className="text-neutral-400" />
+                                <Shield size={16} className="text-neutral-500" />
                                 <span>Users & Permissions</span>
                             </Link>
                         )}
+                        <div className="h-px bg-neutral-800 my-1.5 mx-2" />
                         <button
                             type="button"
                             onClick={() => { setOpen(false); router.post(route('logout')); }}
-                            className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-300 hover:bg-red-500/10"
+                            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10 transition-colors"
                         >
-                            <LogOut size={14} />
-                            <span>Log out</span>
+                            <LogOut size={16} />
+                            <span className="font-medium">Log out</span>
                         </button>
                     </div>
                 </div>

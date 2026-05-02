@@ -261,15 +261,20 @@ function TimeGutter() {
     const hours = [];
     for (let h = DAY_START_HOUR; h < DAY_END_HOUR; h++) hours.push(h);
     return (
-        <div className="w-16 shrink-0 border-r border-neutral-800 bg-neutral-950/50">
-            <div className="h-14 border-b border-neutral-800" />
-            {hours.map((h) => (
-                <div key={h} className="relative" style={{ height: HOUR_HEIGHT }}>
-                    <span className="absolute -top-2.5 right-3 text-[10px] font-bold tracking-tight text-neutral-500">
-                        {h === 0 ? '12 AM' : h < 12 ? `${h} AM` : h === 12 ? '12 PM' : `${h - 12} PM`}
-                    </span>
-                </div>
-            ))}
+        <div 
+            className="w-12 shrink-0 border-r border-neutral-800 bg-neutral-950/80 sticky left-0 z-40"
+            style={{ minHeight: (DAY_END_HOUR - DAY_START_HOUR) * HOUR_HEIGHT + 56 }}
+        >
+            <div className="h-14 border-b border-neutral-800 bg-neutral-900/50" />
+            <div className="relative">
+                {hours.map((h) => (
+                    <div key={h} className="relative flex justify-end pr-2" style={{ height: HOUR_HEIGHT }}>
+                        <span className="absolute -top-2 text-[9px] font-bold text-neutral-600 uppercase">
+                            {h === 0 ? '12a' : h < 12 ? `${h}a` : h === 12 ? '12p' : `${h - 12}p`}
+                        </span>
+                    </div>
+                ))}
+            </div>
         </div>
     );
 }
@@ -327,24 +332,25 @@ function DayColumn({ day, isToday, blocks, onCreate, onSelectBlock, onDropTask, 
     return (
         <div
             ref={colRef}
-            className={`relative flex-1 border-r border-neutral-800 transition-colors ${isToday ? 'bg-purple-500/[0.02]' : ''}`}
+            className={`relative flex-1 border-r border-neutral-800/80 transition-colors ${isToday ? 'bg-purple-500/[0.03]' : ''}`}
             onDragOver={handleDragOver}
             onDrop={handleDrop}
+            style={{ minHeight: (DAY_END_HOUR - DAY_START_HOUR) * HOUR_HEIGHT + 56 }} // 56px for header
         >
             {/* Header */}
-            <div className={`h-14 border-b border-neutral-800 flex flex-col items-center justify-center gap-1 ${isToday ? 'bg-purple-500/10' : 'bg-neutral-900/20'}`}>
-                <div className={`text-[10px] uppercase font-bold tracking-widest ${isToday ? 'text-purple-400' : 'text-neutral-500'}`}>
+            <div className={`h-14 border-b border-neutral-800 flex flex-col items-center justify-center gap-1 sticky top-0 z-30 ${isToday ? 'bg-[#1a1523]' : 'bg-neutral-900/90 backdrop-blur-sm'}`}>
+                <div className={`text-[9px] uppercase font-black tracking-widest ${isToday ? 'text-purple-400' : 'text-neutral-500'}`}>
                     {day.toLocaleDateString(undefined, { weekday: 'short' })}
                 </div>
-                <div className={`w-8 h-8 flex items-center justify-center rounded-full text-base font-bold transition-all ${isToday ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/30' : 'text-neutral-300'}`}>
+                <div className={`w-7 h-7 flex items-center justify-center rounded-lg text-sm font-black transition-all ${isToday ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/30' : 'text-neutral-400'}`}>
                     {day.getDate()}
                 </div>
             </div>
 
             {/* Hour cells (visual lines + double-click anchor) */}
-            <div onDoubleClick={handleDoubleClick} className="relative cursor-cell">
+            <div onDoubleClick={handleDoubleClick} className="relative cursor-cell min-h-full">
                 {Array.from({ length: DAY_END_HOUR - DAY_START_HOUR }).map((_, i) => (
-                    <div key={i} className="border-b border-neutral-800/40 pointer-events-none" style={{ height: HOUR_HEIGHT }} />
+                    <div key={i} className="border-b border-neutral-800/30 pointer-events-none" style={{ height: HOUR_HEIGHT }} />
                 ))}
 
                 {/* Now indicator */}
