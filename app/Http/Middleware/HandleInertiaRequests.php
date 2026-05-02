@@ -77,9 +77,20 @@ class HandleInertiaRequests extends Middleware
     {
         $userId = $request->user()->id;
 
-        $spaces = Space::whereNull('parent_id')
-            ->where('is_personal', false)
-            ->with([
+        $spacesQuery = Space::whereNull('parent_id')
+            ->where('is_personal', false);
+
+        // If not admin, restrict to spaces the user is a member of or created
+        if ($request->user()->role_id !== 1) {
+            $spacesQuery->where(function ($q) use ($userId) {
+                $q->where('created_by', $userId)
+                  ->orWhereHas('users', function ($uq) use ($userId) {
+                      $uq->where('user_id', $userId);
+                  });
+            });
+        }
+
+        $spaces = $spacesQuery->with([
                 'children',
                 'folders' => fn ($q) => $q->select('id', 'space_id', 'name', 'color', 'position'),
                 'folders.lists' => fn ($q) => $q->select('id', 'space_id', 'folder_id', 'name', 'color', 'position'),
