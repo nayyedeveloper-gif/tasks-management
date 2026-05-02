@@ -11,6 +11,7 @@ import {
     ArrowLeft,
     LayoutGrid,
     LayoutList,
+    Layers,
     Kanban,
     Filter,
     RefreshCw,
