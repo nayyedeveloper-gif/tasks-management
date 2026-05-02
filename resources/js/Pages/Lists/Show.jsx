@@ -196,6 +196,12 @@ function AssigneePicker({ assigned, onChange, compact = false }) {
     );
 }
 
+function formatDateForInput(dateStr) {
+    if (!dateStr) return '';
+    if (typeof dateStr === 'string' && dateStr.includes('T')) return dateStr.split('T')[0];
+    return dateStr;
+}
+
 export default function ListShow({ list, movableSpaces = [] }) {
     const statuses = list.statuses || [];
     const firstStatusKey = statuses[0]?.key || 'to_do';
@@ -405,7 +411,7 @@ export default function ListShow({ list, movableSpaces = [] }) {
                             <div className="text-xs text-neutral-400">
                                 <input
                                     type="date"
-                                    value={task.start_date || ''}
+                                    value={formatDateForInput(task.start_date)}
                                     onChange={(e) => updateStartDate(task.id, e.target.value)}
                                     className="bg-transparent border-none p-0 text-[11px] text-neutral-400 focus:ring-0 w-24 cursor-pointer hover:text-neutral-200"
                                 />
@@ -413,7 +419,7 @@ export default function ListShow({ list, movableSpaces = [] }) {
                             <div className="text-xs text-neutral-400">
                                 <input
                                     type="date"
-                                    value={task.due_date || ''}
+                                    value={formatDateForInput(task.due_date)}
                                     onChange={(e) => updateDueDate(task.id, e.target.value)}
                                     className={`bg-transparent border-none p-0 text-[11px] focus:ring-0 w-24 cursor-pointer hover:text-neutral-200 ${isOverdue(task.due_date) ? 'text-red-400' : 'text-neutral-400'}`}
                                 />
@@ -482,7 +488,7 @@ export default function ListShow({ list, movableSpaces = [] }) {
                                         <div className="text-xs text-neutral-500">
                                             <input
                                                 type="date"
-                                                value={sub.start_date || ''}
+                                                value={formatDateForInput(sub.start_date)}
                                                 onChange={(e) => updateStartDate(sub.id, e.target.value)}
                                                 className="bg-transparent border-none p-0 text-[11px] text-neutral-500 focus:ring-0 w-24 cursor-pointer hover:text-neutral-300"
                                             />
@@ -490,7 +496,7 @@ export default function ListShow({ list, movableSpaces = [] }) {
                                         <div className="text-xs text-neutral-500">
                                             <input
                                                 type="date"
-                                                value={sub.due_date || ''}
+                                                value={formatDateForInput(sub.due_date)}
                                                 onChange={(e) => updateDueDate(sub.id, e.target.value)}
                                                 className={`bg-transparent border-none p-0 text-[11px] focus:ring-0 w-24 cursor-pointer hover:text-neutral-300 ${isOverdue(sub.due_date) ? 'text-red-400' : 'text-neutral-500'}`}
                                             />

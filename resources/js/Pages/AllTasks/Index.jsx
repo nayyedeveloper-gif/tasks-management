@@ -367,6 +367,12 @@ export default function AllTasksIndex({ tasks, groupedByStatus, statuses, spaces
     );
 }
 
+function formatDateForInput(dateStr) {
+    if (!dateStr) return '';
+    if (typeof dateStr === 'string' && dateStr.includes('T')) return dateStr.split('T')[0];
+    return dateStr;
+}
+
 function TaskRow({ task, statuses, onClick, onStatusChange, onAssigneeChange, onDueDateChange, onStartDateChange, onDelete }) {
     const st = statuses.find(s => s.key === task.status) || { key: task.status, label: task.status, color: '#6b7280' };
     const hasSubtasks = (task.subtasks_count || 0) > 0;
@@ -405,7 +411,7 @@ function TaskRow({ task, statuses, onClick, onStatusChange, onAssigneeChange, on
             <div className="text-xs text-neutral-400">
                 <input
                     type="date"
-                    value={task.start_date || ''}
+                    value={formatDateForInput(task.start_date)}
                     onChange={(e) => onStartDateChange(e.target.value)}
                     className="bg-transparent border-none p-0 text-[11px] text-neutral-400 focus:ring-0 w-24 cursor-pointer hover:text-neutral-200"
                 />
@@ -413,7 +419,7 @@ function TaskRow({ task, statuses, onClick, onStatusChange, onAssigneeChange, on
             <div className="text-xs text-neutral-400">
                 <input
                     type="date"
-                    value={task.due_date || ''}
+                    value={formatDateForInput(task.due_date)}
                     onChange={(e) => onDueDateChange(e.target.value)}
                     className={`bg-transparent border-none p-0 text-[11px] focus:ring-0 w-24 cursor-pointer hover:text-neutral-200 ${isOverdue(task.due_date) ? 'text-red-400' : 'text-neutral-400'}`}
                 />
