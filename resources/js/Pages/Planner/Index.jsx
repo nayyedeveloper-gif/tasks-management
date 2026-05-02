@@ -12,6 +12,7 @@ import {
     GripVertical,
     Clock,
     AlignLeft,
+    CheckSquare,
 } from 'lucide-react';
 
 /* ----------------------- Time helpers ----------------------- */
