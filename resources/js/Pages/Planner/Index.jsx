@@ -78,6 +78,8 @@ function dateAtMinutes(day, minutes) {
 
 function TaskChip({ task, onDragStart }) {
     const due = task.due_date ? new Date(task.due_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : null;
+    const priorityColor = PRIORITY_COLOR[task.priority] || PRIORITY_COLOR.normal;
+    
     return (
         <div
             draggable
@@ -88,23 +90,36 @@ function TaskChip({ task, onDragStart }) {
                 }));
                 onDragStart?.(task);
             }}
-            className="group flex items-center gap-2 px-2.5 py-1.5 rounded-md border border-neutral-800 bg-neutral-900 hover:border-purple-500/60 hover:bg-neutral-800 cursor-grab active:cursor-grabbing"
+            className="group flex flex-col gap-1.5 px-3 py-2.5 rounded-lg border border-neutral-800 bg-neutral-900/50 hover:border-purple-500/40 hover:bg-neutral-800/80 cursor-grab active:cursor-grabbing transition-all duration-200"
         >
-            <GripVertical size={12} className="text-neutral-600 shrink-0" />
-            <span
-                className="w-1.5 h-1.5 rounded-full shrink-0"
-                style={{ background: PRIORITY_COLOR[task.priority] || PRIORITY_COLOR.normal }}
-            />
-            <div className="flex-1 min-w-0">
-                <div className="text-xs text-neutral-100 truncate">{task.title}</div>
-                <div className="text-[10px] text-neutral-500 truncate">
-                    {task.list?.space?.name ? `${task.list.space.name} · ` : ''}
+            <div className="flex items-center gap-2">
+                <GripVertical size={12} className="text-neutral-600 shrink-0 group-hover:text-neutral-400 transition-colors" />
+                <span className="flex-1 min-w-0 text-[13px] font-medium text-neutral-200 truncate group-hover:text-white">
+                    {task.title}
+                </span>
+                <span
+                    className="w-2 h-2 rounded-full shrink-0 shadow-[0_0_8px_rgba(0,0,0,0.3)]"
+                    style={{ background: priorityColor }}
+                />
+            </div>
+            <div className="flex items-center justify-between text-[11px] text-neutral-500 pl-5">
+                <span className="truncate max-w-[120px]">
                     {task.list?.name || 'No list'}
-                    {due && ` · due ${due}`}
-                </div>
+                </span>
+                {due && (
+                    <span className={`flex items-center gap-1 shrink-0 ${isOverdue(task.due_date) ? 'text-red-400' : ''}`}>
+                        <CalendarIcon size={10} />
+                        {due}
+                    </span>
+                )}
             </div>
         </div>
     );
+}
+
+function isOverdue(d) {
+    if (!d) return false;
+    return new Date(d) < startOfDay(new Date());
 }
 
 function BlockEditor({ block, onClose, onChanged }) {
@@ -146,30 +161,36 @@ function BlockEditor({ block, onClose, onChanged }) {
         });
     };
 
-    const inputCls = 'mt-1 w-full px-3 py-2 rounded-md bg-neutral-800 border border-neutral-700 text-sm text-white outline-none focus:border-purple-500';
+    const inputCls = 'mt-1.5 w-full px-3 py-2 rounded-lg bg-neutral-950 border border-neutral-800 text-sm text-white outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500/20 transition-all';
 
     return (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={onClose}>
-            <form onSubmit={submit} onClick={(e) => e.stopPropagation()} className="bg-neutral-900 border border-neutral-800 rounded-lg w-full max-w-md">
-                <div className="px-4 py-3 border-b border-neutral-800 flex items-center justify-between">
-                    <h2 className="text-sm font-semibold flex items-center gap-2">
-                        <CalendarIcon size={15} className="text-purple-400" />
-                        {isNew ? 'New time block' : 'Edit time block'}
-                    </h2>
-                    <button type="button" onClick={onClose} className="text-neutral-400 hover:text-white"><X size={15} /></button>
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200" onClick={onClose}>
+            <form onSubmit={submit} onClick={(e) => e.stopPropagation()} className="bg-neutral-900 border border-neutral-800 rounded-xl w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+                <div className="px-5 py-4 border-b border-neutral-800 flex items-center justify-between bg-neutral-900/50">
+                    <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center text-purple-400 shadow-inner">
+                            <CalendarIcon size={16} />
+                        </div>
+                        <h2 className="text-base font-semibold text-white">
+                            {isNew ? 'Create Time Block' : 'Edit Time Block'}
+                        </h2>
+                    </div>
+                    <button type="button" onClick={onClose} className="p-1 rounded-md text-neutral-500 hover:text-white hover:bg-neutral-800 transition-all">
+                        <X size={18} />
+                    </button>
                 </div>
-                <div className="p-4 space-y-3">
+                <div className="p-5 space-y-4">
                     <div>
-                        <label className="text-xs text-neutral-400">Title</label>
+                        <label className="text-xs font-semibold uppercase tracking-wider text-neutral-500">Block Title</label>
                         <input
                             value={title} onChange={(e) => setTitle(e.target.value)}
-                            placeholder={block.task_id ? 'Working on…' : 'Deep work, meeting, focus…'}
+                            placeholder={block.task_id ? 'Working on…' : 'e.g. Deep work, Focus session'}
                             className={inputCls} autoFocus required
                         />
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="text-xs text-neutral-400 flex items-center gap-1"><Clock size={11} /> Starts</label>
+                            <label className="text-xs font-semibold uppercase tracking-wider text-neutral-500 flex items-center gap-1.5"><Clock size={12} /> Starts</label>
                             <input
                                 type="datetime-local"
                                 value={toIsoLocal(new Date(startsAt)).slice(0, 16)}
@@ -178,7 +199,7 @@ function BlockEditor({ block, onClose, onChanged }) {
                             />
                         </div>
                         <div>
-                            <label className="text-xs text-neutral-400 flex items-center gap-1"><Clock size={11} /> Ends</label>
+                            <label className="text-xs font-semibold uppercase tracking-wider text-neutral-500 flex items-center gap-1.5"><Clock size={12} /> Ends</label>
                             <input
                                 type="datetime-local"
                                 value={toIsoLocal(new Date(endsAt)).slice(0, 16)}
@@ -188,35 +209,42 @@ function BlockEditor({ block, onClose, onChanged }) {
                         </div>
                     </div>
                     <div>
-                        <label className="text-xs text-neutral-400 flex items-center gap-1"><AlignLeft size={11} /> Notes</label>
+                        <label className="text-xs font-semibold uppercase tracking-wider text-neutral-500 flex items-center gap-1.5"><AlignLeft size={12} /> Notes</label>
                         <textarea
                             value={description} onChange={(e) => setDescription(e.target.value)}
                             rows={3}
-                            placeholder="Optional notes…"
+                            placeholder="Add some details about this block…"
                             className={inputCls}
                         />
                     </div>
-                    <div className="flex items-center gap-2">
-                        <label className="text-xs text-neutral-400">Color</label>
-                        <input type="color" value={color} onChange={(e) => setColor(e.target.value)} className="rounded cursor-pointer h-7 w-10 bg-transparent border border-neutral-700" />
-                        <div className="flex gap-1.5 ml-auto">
-                            {['#7c3aed', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#ec4899'].map((c) => (
-                                <button key={c} type="button" onClick={() => setColor(c)}
-                                    className={`w-5 h-5 rounded-full border ${color === c ? 'border-white' : 'border-transparent'}`}
-                                    style={{ background: c }} />
-                            ))}
+                    <div>
+                        <label className="text-xs font-semibold uppercase tracking-wider text-neutral-500">Block Color</label>
+                        <div className="flex items-center gap-3 mt-2">
+                            <div className="flex-1 flex gap-2">
+                                {['#7c3aed', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#ec4899'].map((c) => (
+                                    <button key={c} type="button" onClick={() => setColor(c)}
+                                        className={`w-7 h-7 rounded-full border-2 transition-all hover:scale-110 active:scale-95 ${color === c ? 'border-white ring-2 ring-purple-500/20' : 'border-transparent'}`}
+                                        style={{ background: c }} />
+                                ))}
+                            </div>
+                            <div className="relative group">
+                                <input type="color" value={color} onChange={(e) => setColor(e.target.value)} className="opacity-0 absolute inset-0 w-full h-full cursor-pointer" />
+                                <div className="w-8 h-8 rounded-lg border border-neutral-700 flex items-center justify-center bg-neutral-800 group-hover:border-neutral-500 transition-colors" style={{ background: color }}>
+                                    <Plus size={14} className="text-white drop-shadow-md" />
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div className="px-4 py-3 border-t border-neutral-800 flex items-center justify-between">
+                <div className="px-5 py-4 border-t border-neutral-800 flex items-center justify-between bg-neutral-900/30">
                     {!isNew ? (
-                        <button type="button" onClick={remove} className="text-xs text-red-400 hover:text-red-300 inline-flex items-center gap-1.5">
-                            <Trash2 size={12} /> Delete
+                        <button type="button" onClick={remove} className="px-3 py-1.5 rounded-lg text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all inline-flex items-center gap-2">
+                            <Trash2 size={14} /> Delete
                         </button>
                     ) : <span />}
                     <div className="flex gap-2">
-                        <button type="button" onClick={onClose} className="px-3 py-1.5 text-sm text-neutral-300 hover:text-white">Cancel</button>
-                        <button type="submit" disabled={saving} className="px-4 py-1.5 text-sm bg-purple-600 hover:bg-purple-500 rounded-md text-white disabled:opacity-60">
+                        <button type="button" onClick={onClose} className="px-4 py-1.5 text-sm font-medium text-neutral-400 hover:text-white transition-colors">Cancel</button>
+                        <button type="submit" disabled={saving} className="px-6 py-2 text-sm font-bold bg-purple-600 hover:bg-purple-500 rounded-lg text-white disabled:opacity-60 shadow-lg shadow-purple-600/20 active:scale-95 transition-all">
                             {saving ? 'Saving…' : isNew ? 'Create' : 'Save'}
                         </button>
                     </div>
@@ -232,11 +260,11 @@ function TimeGutter() {
     const hours = [];
     for (let h = DAY_START_HOUR; h < DAY_END_HOUR; h++) hours.push(h);
     return (
-        <div className="w-14 shrink-0 border-r border-neutral-800 bg-neutral-950">
-            <div className="h-10 border-b border-neutral-800" />
+        <div className="w-16 shrink-0 border-r border-neutral-800 bg-neutral-950/50">
+            <div className="h-14 border-b border-neutral-800" />
             {hours.map((h) => (
                 <div key={h} className="relative" style={{ height: HOUR_HEIGHT }}>
-                    <span className="absolute -top-2 right-2 text-[10px] text-neutral-500">
+                    <span className="absolute -top-2.5 right-3 text-[10px] font-bold tracking-tight text-neutral-500">
                         {h === 0 ? '12 AM' : h < 12 ? `${h} AM` : h === 12 ? '12 PM' : `${h - 12} PM`}
                     </span>
                 </div>
@@ -298,24 +326,24 @@ function DayColumn({ day, isToday, blocks, onCreate, onSelectBlock, onDropTask, 
     return (
         <div
             ref={colRef}
-            className="relative flex-1 border-r border-neutral-800"
+            className={`relative flex-1 border-r border-neutral-800 transition-colors ${isToday ? 'bg-purple-500/[0.02]' : ''}`}
             onDragOver={handleDragOver}
             onDrop={handleDrop}
         >
             {/* Header */}
-            <div className={`h-10 border-b border-neutral-800 flex flex-col items-center justify-center ${isToday ? 'bg-purple-500/5' : ''}`}>
-                <div className="text-[10px] uppercase tracking-wider text-neutral-500">
+            <div className={`h-14 border-b border-neutral-800 flex flex-col items-center justify-center gap-1 ${isToday ? 'bg-purple-500/10' : 'bg-neutral-900/20'}`}>
+                <div className={`text-[10px] uppercase font-bold tracking-widest ${isToday ? 'text-purple-400' : 'text-neutral-500'}`}>
                     {day.toLocaleDateString(undefined, { weekday: 'short' })}
                 </div>
-                <div className={`text-sm font-semibold ${isToday ? 'text-purple-400' : 'text-neutral-200'}`}>
+                <div className={`w-8 h-8 flex items-center justify-center rounded-full text-base font-bold transition-all ${isToday ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/30' : 'text-neutral-300'}`}>
                     {day.getDate()}
                 </div>
             </div>
 
             {/* Hour cells (visual lines + double-click anchor) */}
-            <div onDoubleClick={handleDoubleClick} className="relative">
+            <div onDoubleClick={handleDoubleClick} className="relative cursor-cell">
                 {Array.from({ length: DAY_END_HOUR - DAY_START_HOUR }).map((_, i) => (
-                    <div key={i} className="border-b border-neutral-800/60" style={{ height: HOUR_HEIGHT }} />
+                    <div key={i} className="border-b border-neutral-800/40 pointer-events-none" style={{ height: HOUR_HEIGHT }} />
                 ))}
 
                 {/* Now indicator */}
@@ -346,10 +374,10 @@ function NowLine() {
     if (min < 0 || min > (DAY_END_HOUR - DAY_START_HOUR) * 60) return null;
     const top = (min / 60) * HOUR_HEIGHT;
     return (
-        <div className="absolute left-0 right-0 z-20 pointer-events-none" style={{ top }}>
+        <div className="absolute left-0 right-0 z-20 pointer-events-none group" style={{ top }}>
             <div className="relative">
-                <div className="absolute -left-1 -top-1 w-2 h-2 rounded-full bg-pink-500" />
-                <div className="h-px bg-pink-500" />
+                <div className="absolute -left-1.5 -top-1.5 w-3 h-3 rounded-full bg-pink-500 border-2 border-neutral-950 shadow-[0_0_10px_rgba(236,72,153,0.6)] animate-pulse" />
+                <div className="h-px w-full bg-gradient-to-r from-pink-500 to-transparent" />
             </div>
         </div>
     );
@@ -370,7 +398,7 @@ function BlockCard({ block, day, onClick, onResize }) {
     const durMin = (renderEnd - renderStart) / 60_000;
     
     const top = (startMin / 60) * HOUR_HEIGHT;
-    const height = Math.max(20, (durMin / 60) * HOUR_HEIGHT);
+    const height = Math.max(24, (durMin / 60) * HOUR_HEIGHT);
 
     const onDragStart = (e) => {
         e.dataTransfer.effectAllowed = 'move';
@@ -418,22 +446,32 @@ function BlockCard({ block, day, onClick, onResize }) {
             draggable
             onDragStart={onDragStart}
             onClick={onClick}
-            className="absolute left-1 right-1 rounded-md border-l-[3px] cursor-pointer overflow-hidden group hover:shadow-lg transition-shadow"
+            className="absolute left-1 right-1 rounded-lg border-l-[4px] cursor-pointer overflow-hidden group hover:shadow-2xl hover:brightness-110 active:scale-[0.98] transition-all duration-200"
             style={{
-                top, height,
-                background: `${tone}26`,
+                top: top + 2,
+                height: height - 4,
+                background: `${tone}33`,
                 borderLeftColor: tone,
                 borderTop: `1px solid ${tone}44`,
                 borderRight: `1px solid ${tone}44`,
                 borderBottom: `1px solid ${tone}44`,
                 zIndex: 10,
+                backdropFilter: 'blur(4px)',
             }}
         >
-            <div className="px-2 py-1 text-[10px] leading-tight h-full">
-                <div className="font-semibold text-white truncate">{block.title}</div>
-                {height > 32 && (
-                    <div className="text-neutral-400 text-[9px] mt-0.5 truncate">
-                        {fmtTime(bStart)} – {fmtTime(bEnd)}
+            <div className="px-2.5 py-2 text-[11px] leading-snug h-full flex flex-col justify-between">
+                <div className="min-w-0">
+                    <div className="font-bold text-white truncate drop-shadow-sm">{block.title}</div>
+                    {height > 40 && (
+                        <div className="text-white/60 font-medium text-[9px] mt-0.5 tracking-tight flex items-center gap-1 truncate">
+                            <Clock size={9} />
+                            {fmtTime(bStart)} – {fmtTime(bEnd)}
+                        </div>
+                    )}
+                </div>
+                {block.task && height > 60 && (
+                    <div className="text-[10px] text-white/50 bg-black/20 rounded px-1.5 py-0.5 mt-1 truncate border border-white/10 italic">
+                        ↳ {block.task.title}
                     </div>
                 )}
             </div>
@@ -441,8 +479,10 @@ function BlockCard({ block, day, onClick, onResize }) {
             {isSameDay(bEnd, day) && (
                 <div
                     onPointerDown={onResizeStart}
-                    className="absolute bottom-0 left-0 right-0 h-1.5 cursor-ns-resize bg-transparent group-hover:bg-white/10"
-                />
+                    className="absolute bottom-0 left-0 right-0 h-2 cursor-ns-resize bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                >
+                    <div className="w-6 h-0.5 bg-white/30 rounded-full" />
+                </div>
             )}
         </div>
     );
@@ -545,77 +585,85 @@ export default function PlannerIndex({ view, anchor, rangeStart, rangeEnd, block
             <Head title="Planner" />
             <HomeShell
                 title="Planner"
-                subtitle="Drag tasks onto your calendar to time-block your day"
+                subtitle="Time-block your day for maximum productivity"
                 actions={
-                    <div className="flex items-center gap-1.5">
-                        <button onClick={goToday} className="px-2.5 py-1 text-xs rounded-md border border-neutral-800 text-neutral-300 hover:bg-neutral-800">
-                            Today
-                        </button>
-                        <button onClick={() => navigate(-1)} className="p-1 rounded-md text-neutral-400 hover:bg-neutral-800">
-                            <ChevronLeft size={15} />
-                        </button>
-                        <button onClick={() => navigate(1)} className="p-1 rounded-md text-neutral-400 hover:bg-neutral-800">
-                            <ChevronRight size={15} />
-                        </button>
-                        <span className="ml-1 text-sm font-medium text-neutral-200 min-w-[180px]">
+                    <div className="flex items-center gap-3 pr-14">
+                        <div className="flex items-center bg-neutral-900 border border-neutral-800 rounded-lg p-0.5 shadow-inner">
+                            <button onClick={() => navigate(-1)} className="p-1.5 rounded-md text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors">
+                                <ChevronLeft size={16} />
+                            </button>
+                            <button onClick={goToday} className="px-3 py-1 text-xs font-bold text-neutral-300 hover:text-white transition-colors">
+                                Today
+                            </button>
+                            <button onClick={() => navigate(1)} className="p-1.5 rounded-md text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors">
+                                <ChevronRight size={16} />
+                            </button>
+                        </div>
+
+                        <span className="text-sm font-bold text-neutral-200 min-w-[150px] text-center">
                             {headerLabel}
                         </span>
-                        <div className="ml-2 flex items-center rounded-md border border-neutral-800 overflow-hidden">
+
+                        <div className="flex items-center bg-neutral-900 border border-neutral-800 rounded-lg p-1 shadow-inner">
                             {['day', 'week'].map((v) => (
                                 <button
                                     key={v}
                                     onClick={() => setView(v)}
-                                    className={`px-2.5 py-1 text-xs ${view === v ? 'bg-purple-600 text-white' : 'text-neutral-400 hover:bg-neutral-800'}`}
+                                    className={`px-4 py-1 text-xs font-bold rounded-md transition-all duration-200 ${view === v ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/30' : 'text-neutral-500 hover:text-neutral-300'}`}
                                 >
-                                    {v[0].toUpperCase() + v.slice(1)}
+                                    {v.toUpperCase()}
                                 </button>
                             ))}
                         </div>
                     </div>
                 }
             >
-                <div className="flex h-[calc(100vh-7.5rem)] overflow-hidden">
+                <div className="flex h-full bg-neutral-950/50">
                     {/* Unscheduled side panel */}
-                    <aside className="w-72 shrink-0 border-r border-neutral-800 bg-neutral-900/30 flex flex-col">
-                        <div className="px-3 py-2.5 border-b border-neutral-800">
-                            <div className="text-xs font-semibold uppercase tracking-wider text-neutral-400 mb-2">Unscheduled tasks</div>
-                            <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-neutral-800 border border-neutral-700">
-                                <Search size={12} className="text-neutral-500" />
+                    <aside className="w-80 shrink-0 border-r border-neutral-800 bg-neutral-900/40 flex flex-col shadow-2xl z-30">
+                        <div className="p-4 border-b border-neutral-800 bg-neutral-900/60">
+                            <div className="text-[11px] font-bold uppercase tracking-widest text-neutral-500 mb-3 flex items-center justify-between">
+                                <span>Unscheduled Tasks</span>
+                                <span className="bg-neutral-800 text-neutral-400 px-2 py-0.5 rounded-full text-[9px]">{unscheduled.length}</span>
+                            </div>
+                            <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-neutral-950 border border-neutral-800 focus-within:border-purple-500/50 transition-all shadow-inner">
+                                <Search size={14} className="text-neutral-600" />
                                 <input
                                     value={search}
                                     onChange={(e) => setSearch(e.target.value)}
-                                    placeholder="Search tasks…"
-                                    className="bare-input"
+                                    placeholder="Quick search..."
+                                    className="bg-transparent border-none p-0 text-sm text-white placeholder:text-neutral-600 focus:ring-0 w-full"
                                 />
                             </div>
                         </div>
-                        <div className="flex-1 overflow-y-auto p-2 space-y-1.5">
+                        <div className="flex-1 overflow-y-auto p-3 space-y-2 custom-scrollbar">
                             {filteredUnscheduled.length === 0 ? (
-                                <div className="text-center py-10 text-xs text-neutral-500">
-                                    {search ? 'No matches' : 'All caught up — nothing to schedule'}
+                                <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
+                                    <div className="w-12 h-12 rounded-full bg-neutral-800/50 flex items-center justify-center mb-4 text-neutral-600">
+                                        <CheckSquare size={24} />
+                                    </div>
+                                    <p className="text-sm font-medium text-neutral-500">
+                                        {search ? 'No matching tasks' : 'All caught up!'}
+                                    </p>
+                                    <p className="text-[11px] text-neutral-600 mt-1">Nothing left to schedule at the moment.</p>
                                 </div>
                             ) : filteredUnscheduled.map((t) => (
                                 <TaskChip key={t.id} task={t} />
                             ))}
                         </div>
-                        {scheduledTasks.length > 0 && (
-                            <div className="border-t border-neutral-800 p-2 space-y-1.5">
-                                <div className="text-[10px] uppercase tracking-wider text-neutral-500 px-1">Due in this range</div>
-                                {scheduledTasks.map((t) => (
-                                    <TaskChip key={t.id} task={t} />
-                                ))}
+                        
+                        <div className="p-4 border-t border-neutral-800 bg-neutral-900/60">
+                            <div className="text-[10px] font-medium text-neutral-500 leading-relaxed flex flex-col gap-1.5">
+                                <div className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-purple-500" /> Drag tasks onto calendar to schedule.</div>
+                                <div className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-blue-500" /> Double-click a slot to create a custom block.</div>
+                                <div className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Drag to move, bottom edge to resize.</div>
                             </div>
-                        )}
-                        <div className="px-3 py-2 border-t border-neutral-800 text-[10px] text-neutral-500 leading-relaxed">
-                            <p>• Drag a task onto a day to schedule.</p>
-                            <p>• Double-click a slot to create a block.</p>
-                            <p>• Drag a block to move, drag its bottom edge to resize.</p>
                         </div>
                     </aside>
 
                     {/* Calendar */}
-                    <div className="flex-1 flex flex-col overflow-hidden">
-                        <div className="flex-1 flex overflow-y-auto">
+                    <div className="flex-1 flex flex-col bg-neutral-950/20">
+                        <div className="flex-1 flex overflow-y-auto custom-scrollbar relative">
                             <TimeGutter />
                             {days.map((d) => (
                                 <DayColumn
@@ -645,3 +693,4 @@ export default function PlannerIndex({ view, anchor, rangeStart, rangeEnd, block
         </>
     );
 }
+
