@@ -14,13 +14,17 @@ class TaskListController extends Controller
 {
     public function show(TaskList $list): Response
     {
+        $user = auth()->user();
         $list->load([
             'space',
             'folder',
             'statuses',
-            'tasks.createdBy',
-            'tasks.assignedTo',
-            'tasks.subtasks.assignedTo',
+            'tasks' => function ($q) use ($user) {
+                $q->visibleTo($user)->with(['createdBy', 'assignedTo']);
+            },
+            'tasks.subtasks' => function ($q) use ($user) {
+                $q->visibleTo($user)->with(['assignedTo']);
+            },
         ]);
 
         // Spaces + folders for the Move modal

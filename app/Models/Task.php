@@ -81,4 +81,26 @@ class Task extends Model
     {
         return $this->belongsToMany(Tag::class, 'task_tag');
     }
+
+    public function scopeVisibleTo($query, User $user)
+    {
+        // Admin and Manager can see everything in their accessible spaces
+        if (in_array($user->role, ['admin', 'owner', 'manager'])) {
+            return $query;
+        }
+
+        // Members can see:
+        // 1. Tasks assigned to them or other members
+        // 2. Unassigned tasks
+        // 3. Tasks they created themselves
+        return $query->where(function ($q) use ($user) {
+            $q->where('created_by', $user->id)
+              ->orWhereNull('assigned_to')
+              ->orWhereIn('assigned_to', function ($sub) {
+                  $sub->select('id')
+                      ->from('users')
+                      ->whereIn('role', ['member', 'user']);
+              });
+        });
+    }
 }

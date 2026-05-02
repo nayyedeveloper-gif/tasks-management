@@ -168,6 +168,7 @@ export default function UsersIndex({ users, roles, permissions, allSpaces, auth 
                                         >
                                             <option value="all">All Roles</option>
                                             <option value="admin">Admin</option>
+                                            <option value="manager">Manager</option>
                                             <option value="member">Member</option>
                                         </select>
                                     </div>
@@ -203,7 +204,7 @@ export default function UsersIndex({ users, roles, permissions, allSpaces, auth 
                                                                 }}
                                                                 className="flex items-center gap-2 px-3 py-1.5 rounded-md text-[11px] font-medium bg-neutral-950 border border-neutral-800 text-neutral-300 hover:border-neutral-600 transition w-fit"
                                                             >
-                                                                {user.role_id === 1 ? 'Admin' : 'Member'}
+                                                                {roles.find(r => r.id === user.role_id)?.name || 'Member'}
                                                                 <ChevronDown size={10} className="text-neutral-500" />
                                                             </button>
                                                             {showRoleMenu === user.id && (

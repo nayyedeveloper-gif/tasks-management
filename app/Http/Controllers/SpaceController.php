@@ -55,6 +55,7 @@ class SpaceController extends Controller
 
     public function show($id)
     {
+        $user = auth()->user();
         $space = Space::with([
             'createdBy',
             'children',
@@ -62,9 +63,13 @@ class SpaceController extends Controller
             'invitations' => function ($query) {
                 $query->where('status', 'pending')->where('expires_at', '>', now());
             },
-            'folders.lists.tasks:id,task_list_id,status,priority,start_date,due_date,assigned_to',
+            'folders.lists.tasks' => function ($q) use ($user) {
+                $q->visibleTo($user)->select('id', 'task_list_id', 'status', 'priority', 'start_date', 'due_date', 'assigned_to');
+            },
             'folders.lists.createdBy:id,name',
-            'lists.tasks:id,task_list_id,status,priority,start_date,due_date,assigned_to',
+            'lists.tasks' => function ($q) use ($user) {
+                $q->visibleTo($user)->select('id', 'task_list_id', 'status', 'priority', 'start_date', 'due_date', 'assigned_to');
+            },
             'lists.createdBy:id,name',
         ])->findOrFail($id);
 

@@ -64,7 +64,8 @@ class HomeController extends Controller
 
     public function allTasks()
     {
-        $tasks = \App\Models\Task::with(['createdBy', 'assignedTo', 'space'])
+        $tasks = \App\Models\Task::visibleTo(auth()->user())
+            ->with(['createdBy', 'assignedTo', 'space'])
             ->orderBy('created_at', 'desc')
             ->get();
 

@@ -55,6 +55,8 @@ class UsersController extends Controller
         $role = Role::find($validated['role_id']);
         if ($role->slug === 'admin') {
             $user->role = 'admin';
+        } elseif ($role->slug === 'manager') {
+            $user->role = 'manager';
         } else {
             $user->role = 'member';
         }

@@ -29,7 +29,8 @@ class AllTasksController extends Controller
             ->pluck('id');
 
         // Fetch all tasks in those spaces
-        $tasks = Task::with([
+        $tasks = Task::visibleTo($user)
+            ->with([
                 'list:id,name,space_id',
                 'list.space:id,name',
                 'assignedTo:id,name',

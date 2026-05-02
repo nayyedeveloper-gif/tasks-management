@@ -32,14 +32,16 @@ class MyTasksController extends Controller
         $unscheduled = $myTasks->filter(fn ($t) => ! $t->due_date && ! $t->date_done)->values();
         $done = $myTasks->filter(fn ($t) => $t->date_done !== null)->values();
 
-        $delegated = Task::with(['list:id,name,space_id', 'list.space:id,name', 'assignedTo:id,name'])
+        $delegated = Task::visibleTo($request->user())
+            ->with(['list:id,name,space_id', 'list.space:id,name', 'assignedTo:id,name'])
             ->where('created_by', $userId)
             ->where('assigned_to', '!=', $userId)
             ->orderByDesc('updated_at')
             ->limit(50)
             ->get();
 
-        $recents = Task::with(['list:id,name,space_id', 'list.space:id,name'])
+        $recents = Task::visibleTo($request->user())
+            ->with(['list:id,name,space_id', 'list.space:id,name'])
             ->where(fn ($q) => $q->where('assigned_to', $userId)->orWhere('created_by', $userId))
             ->orderByDesc('updated_at')
             ->limit(8)
