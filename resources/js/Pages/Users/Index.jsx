@@ -113,7 +113,7 @@ export default function UsersIndex({ users, roles, permissions, allSpaces, auth 
                 </div>
 
                 <div className="flex-1 overflow-auto p-8">
-                    <div className="max-w-4xl mx-auto space-y-8">
+                    <div className="space-y-8">
                         {flash?.success && (
                             <div className="px-4 py-2 bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 rounded-md text-sm">
                                 {flash.success}
