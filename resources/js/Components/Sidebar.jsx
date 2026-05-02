@@ -86,9 +86,9 @@ function NavItem({ icon: Icon, label, href, active, badge, indent = 0, trailing 
         >
             {Icon && <Icon size={15} className="text-neutral-400 shrink-0" />}
             <span className="flex-1 truncate">{label}</span>
-            {badge != null && (
-                <span className="text-[10px] bg-neutral-700 text-neutral-200 rounded px-1.5 py-0.5">
-                    {badge}
+            {badge != null && badge > 0 && (
+                <span className="text-[9px] bg-purple-600 text-white font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1 shadow-sm">
+                    {badge > 9 ? '9+' : badge}
                 </span>
             )}
             {trailing}
@@ -212,6 +212,13 @@ export default function Sidebar() {
     const { spaces = [], channels = [], directMessages = [], allMembers = [] } = sidebarData;
     const badges = props.badges || {};
 
+    const railItemsWithBadges = useMemo(() => {
+        return railItems.map(item => ({
+            ...item,
+            badge: item.id === 'chat' ? badges.chat : null
+        }));
+    }, [badges]);
+
     const [openSections, setOpenSections] = useState({
         myTasks: true,
         favorites: true,
@@ -247,12 +254,12 @@ export default function Sidebar() {
             {/* Icon rail */}
             <div className="w-14 bg-neutral-950 border-r border-neutral-800 flex flex-col items-center py-3">
                 <div className="flex flex-col gap-1 flex-1">
-                    {railItems.filter(item => !item.adminOnly || auth?.user?.role === 'owner' || auth?.user?.role === 'admin' || auth?.user?.role_id === 1).map((item) => {
+                    {railItemsWithBadges.filter(item => !item.adminOnly || auth?.user?.role === 'owner' || auth?.user?.role === 'admin' || auth?.user?.role_id === 1).map((item) => {
                         const active = item.route ? isActive(item.route) : false;
                         const Icon = item.icon;
                         const button = (
                             <div
-                                className={`w-10 h-10 flex flex-col items-center justify-center rounded-md text-[10px] gap-0.5 transition-colors ${
+                                className={`w-10 h-10 flex flex-col items-center justify-center rounded-md text-[10px] gap-0.5 transition-colors relative ${
                                     active
                                         ? 'bg-neutral-800 text-white'
                                         : 'text-neutral-400 hover:bg-neutral-800 hover:text-white'
@@ -260,6 +267,11 @@ export default function Sidebar() {
                             >
                                 <Icon size={18} />
                                 <span>{item.label}</span>
+                                {item.badge > 0 && (
+                                    <span className="absolute top-0 right-0 w-4 h-4 bg-purple-600 text-white text-[9px] font-bold rounded-full flex items-center justify-center shadow-lg transform translate-x-1 -translate-y-1">
+                                        {item.badge > 99 ? '99+' : item.badge}
+                                    </span>
+                                )}
                             </div>
                         );
                         return item.route ? (
@@ -458,16 +470,20 @@ export default function Sidebar() {
                                             No channels yet
                                         </div>
                                     )}
-                                    {channels.map((channel) => (
-                                        <NavItem
-                                            key={channel.id}
-                                            icon={Hash}
-                                            label={channel.name}
-                                            href={route('channels.show', channel.id)}
-                                            active={url.includes(`/channels/${channel.id}`)}
-                                            indent={1}
-                                        />
-                                    ))}
+                                    {channels.map((channel) => {
+                                        const isNew = (badges.newChannels || []).includes(channel.id);
+                                        return (
+                                            <NavItem
+                                                key={channel.id}
+                                                icon={Hash}
+                                                label={channel.name}
+                                                href={route('channels.show', channel.id)}
+                                                active={url.includes(`/channels/${channel.id}`)}
+                                                indent={1}
+                                                trailing={isNew && <div className="w-2 h-2 rounded-full bg-purple-500 shadow-sm shadow-purple-500/50 shrink-0" />}
+                                            />
+                                        );
+                                    })}
                                     <button
                                         onClick={() => setShowNewChannel(true)}
                                         className="w-full flex items-center gap-2 px-3 py-1.5 rounded-md text-sm text-neutral-400 hover:bg-neutral-800/70 hover:text-white"
@@ -490,21 +506,31 @@ export default function Sidebar() {
                                             No members yet
                                         </div>
                                     )}
-                                    {allMembers.map((user) => (
-                                        <Link
-                                            key={user.id}
-                                            href={route('messages.index', { user: user.id })}
-                                            className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm hover:bg-neutral-800/70 hover:text-white ${
-                                                url.includes(`user=${user.id}`) ? 'bg-neutral-800 text-white' : 'text-neutral-300'
-                                            }`}
-                                            style={{ paddingLeft: 28 }}
-                                        >
-                                            <div className="w-5 h-5 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-[10px] font-bold text-white">
-                                                {user.name.charAt(0).toUpperCase()}
-                                            </div>
-                                            <span className="flex-1 truncate">{user.name}</span>
-                                        </Link>
-                                    ))}
+                                    {allMembers.map((user) => {
+                                        const unreadCount = (badges.unreadBySender || {})[user.id] || 0;
+                                        return (
+                                            <Link
+                                                key={user.id}
+                                                href={route('messages.index', { user: user.id })}
+                                                className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm hover:bg-neutral-800/70 hover:text-white ${
+                                                    url.includes(`user=${user.id}`) ? 'bg-neutral-800 text-white' : 'text-neutral-300'
+                                                }`}
+                                                style={{ paddingLeft: 28 }}
+                                            >
+                                                <div className="w-5 h-5 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-[10px] font-bold text-white shrink-0">
+                                                    {user.name.charAt(0).toUpperCase()}
+                                                </div>
+                                                <span className={`flex-1 truncate ${unreadCount > 0 ? 'font-bold text-white' : ''}`}>
+                                                    {user.name}
+                                                </span>
+                                                {unreadCount > 0 && (
+                                                    <span className="w-4 h-4 bg-purple-600 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+                                                        {unreadCount > 9 ? '9+' : unreadCount}
+                                                    </span>
+                                                )}
+                                            </Link>
+                                        );
+                                    })}
                                 </div>
                             </div>
                         )}

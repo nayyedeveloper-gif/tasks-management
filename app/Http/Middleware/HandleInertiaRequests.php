@@ -67,9 +67,35 @@ class HandleInertiaRequests extends Middleware
             ->where('created_at', '>=', now()->subDays(7))
             ->count();
 
+        // Direct Message unread counts
+        $unreadMessages = Message::where('receiver_id', $userId)
+            ->where('is_read', false)
+            ->where('is_direct_message', true)
+            ->count();
+
+        // Unread counts by sender for sidebar members list
+        $unreadBySender = Message::where('receiver_id', $userId)
+            ->where('is_read', false)
+            ->where('is_direct_message', true)
+            ->groupBy('sender_id')
+            ->selectRaw('sender_id, count(*) as count')
+            ->pluck('count', 'sender_id')
+            ->toArray();
+
+        // Simple Channel unread check (has messages in last 24h from others)
+        $newChannelMessages = Message::whereNotNull('channel_id')
+            ->where('sender_id', '!=', $userId)
+            ->where('created_at', '>=', now()->subDay())
+            ->groupBy('channel_id')
+            ->pluck('channel_id')
+            ->toArray();
+
         return [
             'today' => $todayCount,
             'inbox' => $inboxCount,
+            'chat' => $unreadMessages,
+            'unreadBySender' => $unreadBySender,
+            'newChannels' => $newChannelMessages,
         ];
     }
 
