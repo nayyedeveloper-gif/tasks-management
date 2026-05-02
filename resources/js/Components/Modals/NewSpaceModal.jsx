@@ -1,20 +1,22 @@
 import { useForm } from '@inertiajs/react';
-import { Layers, X } from 'lucide-react';
+import { Layers, X, Info, Plus } from 'lucide-react';
+import { useState } from 'react';
 
 const SPACE_COLORS = [
-    '#7c3aed', // Purple
-    '#ec4899', // Pink
-    '#ef4444', // Red
-    '#f97316', // Orange
-    '#eab308', // Yellow
-    '#22c55e', // Green
-    '#06b6d4', // Cyan
-    '#3b82f6', // Blue
-    '#6366f1', // Indigo
-    '#64748b', // Slate
+    { name: 'Purple', value: '#7c3aed' },
+    { name: 'Pink', value: '#ec4899' },
+    { name: 'Red', value: '#ef4444' },
+    { name: 'Orange', value: '#f97316' },
+    { name: 'Yellow', value: '#eab308' },
+    { name: 'Green', value: '#22c55e' },
+    { name: 'Cyan', value: '#06b6d4' },
+    { name: 'Blue', value: '#3b82f6' },
+    { name: 'Indigo', value: '#6366f1' },
+    { name: 'Slate', value: '#64748b' },
 ];
 
 export default function NewSpaceModal({ onClose }) {
+    const [showCustomColor, setShowCustomColor] = useState(false);
     const { data, setData, post, processing, errors, reset } = useForm({
         name: '',
         description: '',
@@ -30,67 +32,127 @@ export default function NewSpaceModal({ onClose }) {
     };
 
     return (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onClick={onClose}>
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[100] p-4 animate-in fade-in duration-200" onClick={onClose}>
             <form
                 onSubmit={submit}
                 onClick={(e) => e.stopPropagation()}
-                className="bg-neutral-900 rounded-lg border border-neutral-800 w-full max-w-md"
+                className="bg-neutral-900 rounded-xl border border-neutral-800 w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
             >
-                <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-800">
-                    <h2 className="text-sm font-semibold flex items-center gap-2">
-                        <Layers size={16} className="text-purple-400" /> New Space
-                    </h2>
-                    <button type="button" onClick={onClose} className="text-neutral-400 hover:text-white">
-                        <X size={16} />
+                {/* Header */}
+                <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-800 bg-neutral-900/50">
+                    <div className="flex items-center gap-3">
+                        <div 
+                            className="w-10 h-10 rounded-xl flex items-center justify-center shadow-inner transition-colors duration-300"
+                            style={{ backgroundColor: `${data.color}20`, color: data.color }}
+                        >
+                            <Layers size={20} />
+                        </div>
+                        <div>
+                            <h2 className="text-base font-bold text-white leading-none">Create New Space</h2>
+                            <p className="text-[11px] text-neutral-500 mt-1 uppercase tracking-wider font-semibold">Organize your projects and teams</p>
+                        </div>
+                    </div>
+                    <button type="button" onClick={onClose} className="p-2 rounded-lg text-neutral-500 hover:text-white hover:bg-neutral-800 transition-all">
+                        <X size={20} />
                     </button>
                 </div>
-                <div className="p-4 space-y-3">
+
+                <div className="p-6 space-y-6">
+                    {/* Name Input */}
                     <div>
-                        <label className="text-xs text-neutral-400">Name</label>
+                        <label className="text-xs font-bold text-neutral-400 uppercase tracking-widest mb-2 block">Space Name</label>
                         <input
                             type="text" value={data.name}
                             onChange={(e) => setData('name', e.target.value)}
-                            placeholder="e.g. Marketing, Engineering"
-                            className="mt-1 w-full px-3 py-2 rounded-md bg-neutral-800 border border-neutral-700 text-sm text-white outline-none focus:border-purple-500"
+                            placeholder="e.g. Marketing, Engineering, Design"
+                            className="w-full px-4 py-3 rounded-xl bg-neutral-950 border border-neutral-800 text-sm text-white outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500/20 transition-all shadow-inner placeholder:text-neutral-700"
                             required autoFocus
                         />
-                        {errors.name && <div className="text-red-400 text-xs mt-1">{errors.name}</div>}
+                        {errors.name && <div className="text-red-400 text-xs mt-2 flex items-center gap-1"><Info size={12}/> {errors.name}</div>}
                     </div>
+
+                    {/* Description */}
                     <div>
-                        <label className="text-xs text-neutral-400">Description (optional)</label>
+                        <label className="text-xs font-bold text-neutral-400 uppercase tracking-widest mb-2 block">Description (Optional)</label>
                         <textarea
                             value={data.description}
                             onChange={(e) => setData('description', e.target.value)}
-                            rows={3}
-                            className="mt-1 w-full px-3 py-2 rounded-md bg-neutral-800 border border-neutral-700 text-sm text-white outline-none focus:border-purple-500"
+                            rows={2}
+                            placeholder="What is this space for?"
+                            className="w-full px-4 py-3 rounded-xl bg-neutral-950 border border-neutral-800 text-sm text-white outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500/20 transition-all shadow-inner placeholder:text-neutral-700 resize-none"
                         />
                     </div>
+
+                    {/* Color Selection */}
                     <div>
-                        <label className="text-xs text-neutral-400">Color</label>
-                        <div className="flex flex-wrap gap-2 mt-2">
+                        <div className="flex items-center justify-between mb-3">
+                            <label className="text-xs font-bold text-neutral-400 uppercase tracking-widest block">Select Space Color</label>
+                            <button 
+                                type="button"
+                                onClick={() => setShowCustomColor(!showCustomColor)}
+                                className="text-[10px] font-bold text-purple-400 hover:text-purple-300 uppercase tracking-wider flex items-center gap-1 transition-colors"
+                            >
+                                <Plus size={10} /> Custom Color
+                            </button>
+                        </div>
+                        
+                        <div className="grid grid-cols-5 gap-3">
                             {SPACE_COLORS.map((c) => (
                                 <button
-                                    key={c}
+                                    key={c.value}
                                     type="button"
-                                    onClick={() => setData('color', c)}
-                                    className={`w-6 h-6 rounded-full border-2 transition-transform hover:scale-110 ${
-                                        data.color === c ? 'border-white scale-110' : 'border-transparent'
+                                    onClick={() => setData('color', c.value)}
+                                    title={c.name}
+                                    className={`relative group h-10 rounded-lg border-2 transition-all duration-200 flex items-center justify-center ${
+                                        data.color === c.value 
+                                            ? 'border-white scale-105 shadow-lg' 
+                                            : 'border-transparent hover:scale-105'
                                     }`}
-                                    style={{ backgroundColor: c }}
-                                />
+                                    style={{ backgroundColor: c.value }}
+                                >
+                                    {data.color === c.value && (
+                                        <div className="absolute inset-0 bg-white/20 rounded-md animate-pulse" />
+                                    )}
+                                </button>
                             ))}
                         </div>
+
+                        {showCustomColor && (
+                            <div className="mt-4 p-3 rounded-xl bg-neutral-950 border border-neutral-800 animate-in slide-in-from-top-2 duration-200">
+                                <div className="flex items-center gap-4">
+                                    <input 
+                                        type="color" 
+                                        value={data.color} 
+                                        onChange={(e) => setData('color', e.target.value)}
+                                        className="h-10 w-20 rounded-lg bg-neutral-900 border border-neutral-800 cursor-pointer"
+                                    />
+                                    <input 
+                                        type="text" 
+                                        value={data.color} 
+                                        onChange={(e) => setData('color', e.target.value)}
+                                        className="flex-1 bg-transparent border-none p-0 text-sm text-white font-mono uppercase focus:ring-0"
+                                    />
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
-                <div className="flex justify-end gap-2 px-4 py-3 border-t border-neutral-800">
-                    <button type="button" onClick={onClose} className="px-3 py-1.5 text-sm text-neutral-300 hover:text-white">
+
+                {/* Footer */}
+                <div className="flex justify-end items-center gap-3 px-6 py-5 border-t border-neutral-800 bg-neutral-900/30">
+                    <button 
+                        type="button" 
+                        onClick={onClose} 
+                        className="px-5 py-2 text-sm font-bold text-neutral-400 hover:text-white transition-colors"
+                    >
                         Cancel
                     </button>
                     <button
-                        type="submit" disabled={processing}
-                        className="px-4 py-1.5 text-sm bg-purple-600 hover:bg-purple-500 rounded-md text-white disabled:opacity-50"
+                        type="submit" 
+                        disabled={processing || !data.name}
+                        className="px-8 py-2.5 text-sm font-black bg-purple-600 hover:bg-purple-500 disabled:bg-purple-600/50 disabled:cursor-not-allowed rounded-xl text-white shadow-xl shadow-purple-600/20 active:scale-95 transition-all"
                     >
-                        Create space
+                        {processing ? 'Creating...' : 'Create Space'}
                     </button>
                 </div>
             </form>

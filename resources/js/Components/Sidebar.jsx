@@ -159,14 +159,20 @@ function SpaceNode({ space, level, currentUrl, expanded, onToggle }) {
                 </button>
                 <Link
                     href={route('spaces.show', space.id)}
-                    className={`flex-1 flex items-center gap-2 px-2 py-1.5 rounded-md text-sm transition-colors ${
+                    className={`flex-1 flex items-center gap-2.5 px-2 py-1.5 rounded-md text-sm transition-all duration-200 ${
                         isActive
-                            ? 'bg-neutral-800 text-white'
+                            ? 'bg-neutral-800 text-white shadow-sm'
                             : 'text-neutral-300 hover:bg-neutral-800/70 hover:text-white'
                     }`}
                 >
-                    <Layers size={14} style={{ color: space.color || '#94a3b8' }} className="shrink-0" />
-                    <span className="flex-1 truncate">{space.name}</span>
+                    <div 
+                        className="w-2.5 h-2.5 rounded-full shrink-0 shadow-[0_0_10px_rgba(0,0,0,0.5)]" 
+                        style={{ 
+                            backgroundColor: space.color || '#94a3b8',
+                            boxShadow: `0 0 12px ${(space.color || '#94a3b8')}40`
+                        }} 
+                    />
+                    <span className={`flex-1 truncate ${isActive ? 'font-bold' : 'font-medium'}`}>{space.name}</span>
                 </Link>
             </div>
             {isOpen && (
