@@ -51,8 +51,29 @@ export default function TaskDrawer({ taskId, onClose, onChanged, statuses = [] }
                     setLoading(false);
                 }
             });
+
+        // Listen for real-time comments
+        const channel = window.Echo.channel(`tasks.${taskId}`);
+        channel.listen('.comment.sent', (e) => {
+            setData((prev) => {
+                if (!prev || prev.task.id !== taskId) return prev;
+                // Add new comment if it doesn't exist
+                const exists = prev.task.comments.some(c => c.id === e.comment.id);
+                if (exists) return prev;
+                return {
+                    ...prev,
+                    task: {
+                        ...prev.task,
+                        comments: [...prev.task.comments, e.comment]
+                    }
+                };
+            });
+            onChanged?.();
+        });
+
         return () => {
             active = false;
+            window.Echo.leave(`tasks.${taskId}`);
         };
     }, [taskId, onChanged]);
 

@@ -87,7 +87,7 @@ class InboxController extends Controller
                 'task.list:id,name',
                 'user:id,name',
             ])
-            ->whereHas('task', fn ($q) => $q->where('created_by', $userId))
+            ->whereHas('task', fn ($q) => $q->where('created_by', $userId)->orWhere('assigned_to', $userId))
             ->where('user_id', '!=', $userId)
             ->orderByDesc('created_at')
             ->limit(50)

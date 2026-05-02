@@ -25,7 +25,7 @@ export default function Replies({ comments, tab }) {
     const [active, setActive] = useState(tab || 'unread');
 
     const filtered = comments.filter((c) =>
-        active === 'unread' ? !c.is_resolved : c.is_resolved
+        active === 'unread' ? !c.is_read : c.is_read
     );
 
     const toggleResolved = (id, current) => {
