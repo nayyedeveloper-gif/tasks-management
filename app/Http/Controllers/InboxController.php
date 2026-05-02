@@ -61,6 +61,14 @@ class InboxController extends Controller
             ->sortByDesc('happened_at')
             ->values();
 
+        // Mark inbox comments as read
+        TaskComment::whereHas('task', fn ($q) => $q
+                ->where('assigned_to', $userId)
+                ->orWhere('created_by', $userId))
+            ->where('user_id', '!=', $userId)
+            ->where('is_read', false)
+            ->update(['is_read' => true]);
+
         return Inertia::render('Inbox/Index', [
             'items' => $items,
         ]);
@@ -84,6 +92,12 @@ class InboxController extends Controller
             ->orderByDesc('created_at')
             ->limit(50)
             ->get();
+
+        // Mark replies as read
+        TaskComment::whereHas('task', fn ($q) => $q->where('created_by', $userId))
+            ->where('user_id', '!=', $userId)
+            ->where('is_read', false)
+            ->update(['is_read' => true]);
 
         return Inertia::render('Inbox/Replies', [
             'comments' => $comments,
@@ -113,8 +127,16 @@ class InboxController extends Controller
             $query->where('is_resolved', true);
         }
 
+        $comments = $query->orderByDesc('created_at')->limit(100)->get();
+
+        // Mark assigned comments as read
+        TaskComment::whereHas('task', fn ($q) => $q->where('assigned_to', $userId))
+            ->where('user_id', '!=', $userId)
+            ->where('is_read', false)
+            ->update(['is_read' => true]);
+
         return Inertia::render('Inbox/AssignedComments', [
-            'comments' => $query->orderByDesc('created_at')->limit(100)->get(),
+            'comments' => $comments,
             'filters' => [
                 'resolved' => $resolved,
                 'range' => $range,

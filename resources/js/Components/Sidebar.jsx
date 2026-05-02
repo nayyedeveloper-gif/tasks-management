@@ -45,8 +45,8 @@ const railItems = [
 
 const homeMenu = [
     { id: 'inbox', label: 'Inbox', icon: Inbox, route: 'inbox.index', badgeKey: 'inbox' },
-    { id: 'replies', label: 'Replies', icon: MessageSquareReply, route: 'replies.index' },
-    { id: 'comments', label: 'Assigned Comments', icon: MessageSquare, route: 'assigned-comments.index' },
+    { id: 'replies', label: 'Replies', icon: MessageSquareReply, route: 'replies.index', badgeKey: 'replies' },
+    { id: 'comments', label: 'Assigned Comments', icon: MessageSquare, route: 'assigned-comments.index', badgeKey: 'assignedComments' },
 ];
 
 const myTasksItems = [

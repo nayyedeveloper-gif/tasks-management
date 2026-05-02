@@ -62,10 +62,20 @@ class HandleInertiaRequests extends Middleware
             ->whereNull('date_done')
             ->count();
 
-        $inboxCount = TaskComment::whereHas('task', fn ($q) => $q->where('assigned_to', $userId))
+        // Unread replies (comments on tasks created by user)
+        $repliesCount = TaskComment::whereHas('task', fn ($q) => $q->where('created_by', $userId))
             ->where('user_id', '!=', $userId)
-            ->where('created_at', '>=', now()->subDays(7))
+            ->where('is_read', false)
             ->count();
+
+        // Unread assigned comments (comments on tasks assigned to user)
+        $assignedCommentsCount = TaskComment::whereHas('task', fn ($q) => $q->where('assigned_to', $userId))
+            ->where('user_id', '!=', $userId)
+            ->where('is_read', false)
+            ->count();
+
+        // Total Inbox count (unread comments + maybe unread assignments if we had that)
+        $inboxCount = $repliesCount + $assignedCommentsCount;
 
         // Direct Message unread counts
         $unreadMessages = Message::where('receiver_id', $userId)
@@ -93,6 +103,8 @@ class HandleInertiaRequests extends Middleware
         return [
             'today' => $todayCount,
             'inbox' => $inboxCount,
+            'replies' => $repliesCount,
+            'assignedComments' => $assignedCommentsCount,
             'chat' => $unreadMessages,
             'unreadBySender' => $unreadBySender,
             'newChannels' => $newChannelMessages,
