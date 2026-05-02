@@ -12,8 +12,19 @@ class SpaceController extends Controller
 {
     public function index()
     {
-        $spaces = Space::whereNull('parent_id')
-            ->with('children', 'createdBy')
+        $query = Space::whereNull('parent_id');
+
+        // If not admin, restrict to spaces the user is a member of or created
+        if (auth()->user()->role_id !== 1) {
+            $query->where(function ($q) {
+                $q->where('created_by', auth()->id())
+                  ->orWhereHas('users', function ($uq) {
+                      $uq->where('user_id', auth()->id());
+                  });
+            });
+        }
+
+        $spaces = $query->with('children', 'createdBy')
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -54,6 +65,13 @@ class SpaceController extends Controller
             'lists.tasks:id,task_list_id,status,priority,start_date,due_date,assigned_to',
             'lists.createdBy:id,name',
         ])->findOrFail($id);
+
+        // Authorization check
+        if (auth()->user()->role_id !== 1 && $space->created_by !== auth()->id()) {
+            if (!$space->users()->where('user_id', auth()->id())->exists()) {
+                abort(403, 'You do not have access to this space.');
+            }
+        }
 
         // Decorate lists with computed stats (progress / start / end / priority / owner)
         $decorate = function ($list) {
